@@ -1,10 +1,15 @@
 <template>
     <div class="root">
+        <DialogOverlay 
+            :isShow="isShow"
+            @cancel-click="isShow = !isShow"
+            @confirm-click="deleteSession(deleteIdx)"
+        />
         <div class="container-wrapper">
             <div class="chat-record-wrapper-father">
                 <div class="chat-record-wrapper">
                     <div class="chat-record">
-                        <div class="logo-wrapper">
+                        <div class="logo-wrapper" v-show="!isLargeLayout">
                             <div class="logo-image" @click="toZhtHome">
                                 <img src="../assets/logo2.png">
                             </div>
@@ -13,13 +18,20 @@
                             </div>
                         </div>
                         <div class="add-wrapper">
-                            <div class="add-btn">
-                                <span>新增会话</span>
+                            <div class="add-btn" @click="preAddSession">
+                                <span>{{ addInputMargin === "-0.58667rem" ? "新增会话" : "取消新增" }}</span>
+                            </div>
+                        </div>
+                        <div class="add-input-wrapper-father">
+                            <div class="add-input-wrapper">
+                                <div class="add-input">
+                                    <input type="text" placeholder="请输入会话标题" ref="sessionTitleInputNode" v-model="sessionTitle" @keyup.enter="confirmAddSession">
+                                </div>
+                                <div class="confirm-add-btn" @click="confirmAddSession">确认</div>
                             </div>
                         </div>
                         <div class="chat-wrapper">
-                            <ChatItem title="NAGA X4的特性" idx="0"/>
-                            <ChatItem title="第二个会话" idx="1"/>
+                            <component v-for="(item, idx) in chatItemList" :key="idx" :idx="idx" :title="item.title" :is="ChatItem" @delete-session="preDelete(idx)"></component>
                         </div>
                     </div>
                     <div class="layout-toggle-btn" @click="toggleLayout">
@@ -59,10 +71,11 @@
 </template>
 
 <script setup lang="js">
-import { ref, onMounted, reactive } from "vue";
+import { ref, onMounted, reactive, watch } from "vue";
 import ChatItem from "../components/ChatItem.vue";
 import UserMessage from "../components/UserMessage.vue";
 import RobotMessage from "../components/RobotMessage.vue";
+import DialogOverlay from "../components/DialogOverlay.vue";
 import { useSessionStore } from "../stores/session";
 import { ElInput } from "element-plus";
 import { Promotion, ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
@@ -70,14 +83,25 @@ import timeFormat from '../utils/timeFormat';
 import sleep from "../utils/sleep";
 
 const session = useSessionStore();
-const toggleNodeWidth = 0.42667;
 
+let deleteIdx = 0; // 待删除的索引
 let userInput = ref("");
-let leftBarPos = ref("0%");
+let leftBarPosMargin = ref("0");
 let leftBarHidden = ref("visible");
-let leftBarWidth = ref("4.8rem"); 
 let isLargeLayout = ref(false); // 是否为宽广布局模式，初始情况下不是宽广布局
+let isDisableLaunch = ref(true); // 是否禁止发送
+let launchBtnColor = ref("rgba(108, 108, 108, 0.6)");
+let launchBtnCursor = ref("not-allowed");
+let addInputMargin = ref("-0.58667rem");
+let sessionTitleInputNode = ref();
+let sessionTitle = ref("");
+let isShow = ref(false);  // 是否显示删除的遮罩层
+
 let msgList = reactive([]); // 是一个结构体数组，结构体中有时间、内容、需要渲染的组件（是UserMessage还是RobotMessage）
+let chatItemList = reactive([
+    { title: "NAGA X4的特性" },
+    { title: "第二个会话" },
+])
 
 //跳转到中航通官网
 const toZhtHome = () => {
@@ -89,6 +113,8 @@ const toZhtHome = () => {
 
 // 发送信息
 const launchMsg = () => {
+    if (isDisableLaunch.value) return; // 不能发送空消息
+
     const now = new Date();
     const timeFormatStr = timeFormat(now);
     const chatContent = userInput.value;
@@ -114,40 +140,70 @@ const launchMsg = () => {
 
 // 切换布局
 const toggleLayout = async () => {
-    let cnt = 0; // 收缩或扩张8次停止
     if (!isLargeLayout.value) {
         leftBarHidden.value = "hidden";
+        leftBarPosMargin.value = "-4.592rem";
+        await sleep(700);
         isLargeLayout.value = true;
-        leftBarPos.value = "-100%";
-        let timeHandler = setInterval(() => {
-            let nowWidth = parseFloat(leftBarWidth.value);
-            if (cnt != 8) {
-                if (cnt == 7) {
-                    nowWidth = toggleNodeWidth / 2;
-                }
-                else nowWidth -= 0.6;
-                cnt++;
-                leftBarWidth.value = String(nowWidth) + "rem";
-            } else clearInterval(timeHandler);
-        }, 50)
+        leftBarHidden.value = "visible";
     } else {
+        leftBarHidden.value = "hidden";
         isLargeLayout.value = false;
-        leftBarPos.value = "0%";
-        let timeHandler = setInterval(() => {
-            let nowWidth = parseFloat(leftBarWidth.value);
-            if (cnt != 8) {
-                if (cnt == 7) {
-                    nowWidth = 4.8;
-                }
-                else nowWidth += 0.6;
-                cnt++;
-                leftBarWidth.value = String(nowWidth) + "rem";
-            } else clearInterval(timeHandler);
-        }, 50)
-        await sleep(400); // 等待过渡时间到了
+        leftBarPosMargin.value = "0";
+        await sleep(700); // 等待过渡时间到了
         leftBarHidden.value = "visible";
     }
 }
+
+// 新增会话前的准备工作
+const preAddSession = () => {
+    if (addInputMargin.value === "-0.58667rem") { // 隐藏状态切换为显现状态
+        addInputMargin.value = "0.37333rem";
+        sessionTitle.value = "";
+        sessionTitleInputNode.value.focus();
+    } else { // 切换为隐藏状态
+        addInputMargin.value = "-0.58667rem";
+    }
+}
+
+// 新增会话
+const confirmAddSession = () => {
+    let title = sessionTitle.value;
+    let newChatItem = {
+        title
+    };
+    chatItemList.unshift(newChatItem);
+    addInputMargin.value = "-0.58667rem";
+    session.changeSession(0); // 将会话路由转移到新建的会话上
+}
+
+// 删除会话的前置操作
+const preDelete = (idx) => {
+    isShow.value = true;
+    deleteIdx = idx;
+}
+
+// 删除会话
+const deleteSession = (idx) => {
+    let len = chatItemList.length;
+    chatItemList.splice(idx, 1);
+    isShow.value = false;
+    if (idx == len - 1) { // 如果是删除的最后一个，则需要重新选择一个会话
+        session.changeSession(idx - 1);
+    }
+}
+
+watch(userInput, (newVal) => {
+    if (newVal.trim() == "") { // 用户输入的是空字符串
+        isDisableLaunch.value = true;
+        launchBtnColor.value = "rgba(108,108,108,0.6)";
+        launchBtnCursor.value = "not-allowed";
+    } else {
+        isDisableLaunch.value = false;
+        launchBtnColor.value = "rgba(108,108,108,1)";
+        launchBtnCursor.value = "pointer";
+    }
+})
 
 onMounted(() => {
 
@@ -195,13 +251,13 @@ $green: #6c6c6c;
             .chat-record-wrapper { // 添加chat-record-wrapper的作用是让toggle-btn相对于这里定位
                 display: flex;
                 position: relative;
-                transition: all 0.4s;
-                left: v-bind(leftBarPos);
+                transition: all 0.7s;
+                // left: v-bind(leftBarPos);
+                margin-left: v-bind(leftBarPosMargin);
                 .chat-record {
-                    width: v-bind(leftBarWidth);
+                    // width: v-bind(leftBarWidth);
                     border-right: 1px solid $gray;
                     border-radius: 5px 0 0 5px;
-                    overflow: v-bind(leftBarHidden);
                     /* background-color: #6c6c6c; */
                     display: flex;
                     flex-direction: column;
@@ -246,6 +302,41 @@ $green: #6c6c6c;
                             &:hover {
                                 border: 1.5px dashed $green;
                                 color: $green;
+                            }
+                        }
+                    }
+                    .add-input-wrapper-father { // 用于实现子元素的top的相对定位相对于父亲
+                        overflow: hidden;
+                        .add-input-wrapper {
+                            display: flex;
+                            margin-top: v-bind(addInputMargin);
+                            padding: 0 10px;
+                            justify-content: space-between;
+                            transition: all 0.7s;
+                            // position: relative;
+                            // top: -100%;
+                            .add-input {
+                                width: 70%;
+                                height: 14px;
+                                input {
+                                    width: 100%;
+                                    height: 100%;
+                                    padding: 2px 5px;
+                                    outline: #dcdfe6 auto 1px;
+                                    border-radius: 5px;
+                                    &:focus {
+                                        outline: $green auto 1px;
+                                    }
+                                }
+                            }
+                            .confirm-add-btn {
+                                line-height: 18px;
+                                background-color: $green;
+                                color: #fff;
+                                border-radius: 4px;
+                                font-size: 9px;
+                                padding: 1.5px 4px;
+                                cursor: pointer;
                             }
                         }
                     }
@@ -307,9 +398,9 @@ $green: #6c6c6c;
                         top: 50%;
                         transform: translateY(-50%);
                         margin: 0 10px 0 0;
-                        background-color: $green;
+                        background-color: v-bind(launchBtnColor);
                         border-radius: 2px;
-                        cursor: pointer;
+                        cursor: v-bind(launchBtnCursor);
                         svg {
                             padding: 2px 6px;
                         }

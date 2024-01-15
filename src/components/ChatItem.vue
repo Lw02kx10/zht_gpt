@@ -10,7 +10,7 @@
             <el-icon class="edit-icon">
                 <EditPen :color="iconColor" v-show="idx == session.nowChoose"/>
             </el-icon>
-            <el-icon class="delete-icon">
+            <el-icon class="delete-icon" @click="$emit('delete-session')">
                 <Delete :color="iconColor" v-show="idx == session.nowChoose"/>
             </el-icon>
         </div>
@@ -22,6 +22,7 @@ import { ChatDotSquare, EditPen, Delete } from "@element-plus/icons-vue";
 import { useSessionStore } from '../stores/session';
 import { ref, watch } from 'vue';
 const props = defineProps(['title', 'idx']);
+defineEmits(['delete-session']);
 
 const session = useSessionStore();
 let wrapperBgc = ref("#ffffff");
