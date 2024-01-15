@@ -22,21 +22,7 @@
             </div>
             <div class="chat-context">
                 <div class="main-context">
-                    <div class="user-context">
-                        <div class="right-part">
-                            <div class="user-avatar">
-                                <img src="../assets/avatar.png">
-                            </div>
-                        </div>
-                        <div class="left-part">
-                            <div class="msg-time">
-                                <span>2024/1/13 21:05:22</span>
-                            </div>
-                            <div class="msg-content">
-                                <span>NAGA X4的特性是什么？</span>
-                            </div>
-                        </div>
-                    </div>
+                    <component v-for="(item, index) in msgList" :key="index" :time="item.time" :content="item.content" :is="item.component"></component>
                 </div>
                 <div class="text-input-line">
                     <div class="input-wrapper">
@@ -46,10 +32,11 @@
                             type="textarea"
                             placeholder="请输入您的问题（Shift+Enter = 换行）"
                             resize="none" 
+                            @keyup.enter="launchMsg"
                         />
                     </div>
                     <div class="launch-btn-wrapper">
-                        <div class="launch-btn">
+                        <div class="launch-btn" @click="launchMsg">
                             <Promotion color="#fff" />
                         </div>
                     </div>
@@ -60,17 +47,45 @@
 </template>
 
 <script setup lang="js">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, reactive } from "vue";
 import ChatItem from "../components/ChatItem.vue";
+import UserMessage from "../components/UserMessage.vue";
+import RobotMessage from "../components/RobotMessage.vue";
 import { useSessionStore } from "../stores/session";
 import { ElInput } from "element-plus";
 import { Promotion } from '@element-plus/icons-vue';
+import timeFormat from '../utils/timeFormat';
 
 const session = useSessionStore();
 let userInput = ref("");
+let msgList = reactive([]); // 是一个结构体数组，结构体中有时间、内容、需要渲染的组件（是UserMessage还是RobotMessage）
+
+const launchMsg = () => {
+    const now = new Date();
+    const timeFormatStr = timeFormat(now);
+    const chatContent = userInput.value;
+    userInput.value = "";
+
+    let userMsg = {
+        time: timeFormatStr,
+        content: chatContent,
+        component: UserMessage,
+    }
+
+    msgList.push(userMsg);
+
+    // chatgpt作回复的逻辑写在这里
+    let robotMsg = {
+        time: timeFormatStr,
+        content: chatContent,
+        component: RobotMessage,
+    }
+
+    msgList.push(robotMsg);
+}
 
 onMounted(() => {
-
+    
 })
 </script>
 
@@ -110,12 +125,13 @@ $green: #6c6c6c;
         background-color: #fff;
         display: flex;
         .chat-record {
-            width: 180px;
+            /* width: 180px; */
             border-right: 1px solid $gray;
             border-radius: 5px 0 0 5px;
             /* background-color: #6c6c6c; */
             display: flex;
             flex-direction: column;
+            flex-shrink: 0; // 默认为1，设置为0后不会被右边对话框的flex容器挤压
             .logo-wrapper {
                 display: flex;
                 height: 25px;
@@ -174,40 +190,6 @@ $green: #6c6c6c;
                 background-position: center center;
                 display: flex;
                 flex-direction: column;
-                .user-context {
-                    display: flex;
-                    flex-direction: row-reverse;
-                    margin-top: 12px;
-                    margin-right: 16px;
-                    .left-part {
-                        display: flex;
-                        flex-direction: column;
-                        .msg-time {
-                            color: #b4bbc4;
-                            text-align: right;
-                            margin-bottom: 3px;
-                            font-size: 9px;
-                        }
-                        .msg-content {
-                            background-color: #d2f9d1;
-                            padding: 7px 7px;
-                            border-radius: 3px;
-                            font-size: 10px;
-                        }
-                    }
-                    .right-part {
-                        .user-avatar {
-                            width: 32px;
-                            height: 32px;
-                            border-radius: 100%;
-                            margin-left: 10px;
-                            img {
-                                width: 100%;
-                                height: 100%;
-                            }
-                        }
-                    }
-                }
             }
             .text-input-line {
                 display: flex;
