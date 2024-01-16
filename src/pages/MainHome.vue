@@ -5,6 +5,10 @@
             @cancel-click="isShow = !isShow"
             @confirm-click="deleteSession(deleteIdx)"
         />
+        <MessageBox 
+            message="删除成功"
+            :isShow="isShowDeleteSuccess"
+        />
         <div class="container-wrapper">
             <div class="chat-record-wrapper-father">
                 <div class="chat-record-wrapper">
@@ -31,7 +35,7 @@
                             </div>
                         </div>
                         <div class="chat-wrapper">
-                            <component v-for="(item, idx) in chatItemList" :key="idx" :idx="idx" :title="item.title" :is="ChatItem" @delete-session="preDelete(idx)"></component>
+                            <component v-for="(item, idx) in chatItemList" :key="idx" :idx="idx" v-model:title="item.title" :is="ChatItem" @delete-session="preDelete(idx)"></component>
                         </div>
                     </div>
                     <div class="layout-toggle-btn" @click="toggleLayout">
@@ -76,6 +80,7 @@ import ChatItem from "../components/ChatItem.vue";
 import UserMessage from "../components/UserMessage.vue";
 import RobotMessage from "../components/RobotMessage.vue";
 import DialogOverlay from "../components/DialogOverlay.vue";
+import MessageBox from "../components/MessageBox.vue";
 import { useSessionStore } from "../stores/session";
 import { ElInput } from "element-plus";
 import { Promotion, ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
@@ -96,6 +101,7 @@ let addInputMargin = ref("-0.58667rem");
 let sessionTitleInputNode = ref();
 let sessionTitle = ref("");
 let isShow = ref(false);  // 是否显示删除的遮罩层
+let isShowDeleteSuccess = ref(false); // 是否显示删除成功的提示
 
 let msgList = reactive([]); // 是一个结构体数组，结构体中有时间、内容、需要渲染的组件（是UserMessage还是RobotMessage）
 let chatItemList = reactive([
@@ -191,6 +197,12 @@ const deleteSession = (idx) => {
     if (idx == len - 1) { // 如果是删除的最后一个，则需要重新选择一个会话
         session.changeSession(idx - 1);
     }
+
+    // 提示删除成功
+    isShowDeleteSuccess.value = true;
+    setTimeout(() => {
+        isShowDeleteSuccess.value = false;
+    }, 2000);
 }
 
 watch(userInput, (newVal) => {

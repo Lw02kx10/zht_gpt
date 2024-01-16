@@ -4,31 +4,41 @@
             <el-icon class="chat-icon">
                 <ChatDotSquare :color="iconColor"/>
             </el-icon>
-            <div class="chat-title">
+            <div class="chat-title" v-show="!modifyState" ref="titleNode">
                 <span>{{ title }}</span>
             </div>
-            <el-icon class="edit-icon">
-                <EditPen :color="iconColor" v-show="idx == session.nowChoose"/>
+            <div class="chat-title-modify-input" v-show="modifyState" ref="inputNode">
+                <input type="text" v-model="title" />
+            </div>
+            <el-icon class="edit-icon" @click="modifyState = true" v-show="!modifyState">
+                <EditPen :color="iconColor" v-show="idx == session.nowChoose" />
             </el-icon>
-            <el-icon class="delete-icon" @click="$emit('delete-session')">
+            <el-icon class="delete-icon" @click="$emit('delete-session')" v-show="!modifyState">
                 <Delete :color="iconColor" v-show="idx == session.nowChoose"/>
+            </el-icon>
+            <el-icon class="save-icon" v-show="modifyState" @click="modifyState = false">
+                <Check :color="iconColor" v-show="idx == session.nowChoose" />
             </el-icon>
         </div>
     </div>
 </template>
 
 <script setup lang="js">
-import { ChatDotSquare, EditPen, Delete } from "@element-plus/icons-vue";
+import { ChatDotSquare, EditPen, Delete, Check } from "@element-plus/icons-vue";
 import { useSessionStore } from '../stores/session';
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 const props = defineProps(['title', 'idx']);
-defineEmits(['delete-session']);
+const title = defineModel('title');
+defineEmits(['delete-session', 'modify-session']);
 
 const session = useSessionStore();
 let wrapperBgc = ref("#ffffff");
 let iconColor = ref("#000000");
 let textColor = ref("#000000");
 let borderColor = ref("#e5e7eb");
+let modifyState = ref(false);
+let titleNode = ref();
+let inputNode = ref();
 
 const changeSession = () => {
     session.changeSession(props.idx);
@@ -41,6 +51,7 @@ watch(() => session.nowChoose, (newVal) => {
         textColor.value = "#6c6c6c";
         borderColor.value = "#6caf7c"; 
     } else {
+        modifyState.value = false; // 点击其他会话时取消该会话的修改状态
         wrapperBgc.value = "#ffffff";
         iconColor.value = "#000000";
         textColor.value = "#000000";
@@ -48,6 +59,10 @@ watch(() => session.nowChoose, (newVal) => {
     }
 }, { immediate: true })
 
+onMounted(() => {
+    const titleNodeRect = titleNode.value.getBoundingClientRect();
+    inputNode.value.style.width = String(titleNodeRect.width) + "px"; // 保证input框的宽度和title的宽度相等 
+})
 </script>
 
 <style lang="scss" scoped>
@@ -55,6 +70,7 @@ $gray: #e5e7eb;
 $green: #6c6c6c;
 @mixin icon-style {
     width: 11px;
+    font-size: 10px;
     display: flex;
     align-items: center;
 }
@@ -89,6 +105,16 @@ $green: #6c6c6c;
             white-space: nowrap;
             text-align: center;
         }
+        .chat-title-modify-input {
+            flex-grow: 1;
+            input {
+                outline: #dcdfe6 auto 0.5px;
+                width: 100%;
+                &:focus {
+                    outline: #6c6c6c auto 0.5px;
+                }
+            }
+        }
         .edit-icon {
             @include icon-style;
             margin-left: 6px;
@@ -99,6 +125,12 @@ $green: #6c6c6c;
             margin-left: 6px;
             margin-right: 6px;
             align-self: center;
+        }
+        .save-icon {
+            @include icon-style;
+            align-self: center;
+            margin-left: 6px;
+            margin-right: 6px;
         }
     }
 }
