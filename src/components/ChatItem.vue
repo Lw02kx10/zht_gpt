@@ -10,7 +10,7 @@
             <div class="chat-title-modify-input" v-show="modifyState" ref="inputNode">
                 <input type="text" v-model="title" />
             </div>
-            <el-icon class="edit-icon" @click="modifyState = true" v-show="!modifyState">
+            <el-icon class="edit-icon" @click="handleEdit" v-show="!modifyState">
                 <EditPen :color="iconColor" v-show="idx == session.nowChoose" />
             </el-icon>
             <el-icon class="delete-icon" @click="$emit('delete-session')" v-show="!modifyState">
@@ -42,6 +42,10 @@ let inputNode = ref();
 
 const changeSession = () => {
     session.changeSession(props.idx);
+}
+const handleEdit = () => {
+    if (session.nowChoose != props.idx) return;
+    modifyState.value = true;
 }
 
 watch(() => session.nowChoose, (newVal) => {

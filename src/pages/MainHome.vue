@@ -185,6 +185,7 @@ const confirmAddSession = () => {
 
 // 删除会话的前置操作
 const preDelete = (idx) => {
+    if (idx != session.nowChoose) return;
     isShow.value = true;
     deleteIdx = idx;
 }
