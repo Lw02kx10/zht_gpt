@@ -16,7 +16,7 @@
             <el-icon class="delete-icon" @click="$emit('delete-session')" v-show="!modifyState">
                 <Delete :color="iconColor" v-show="idx == session.nowChoose"/>
             </el-icon>
-            <el-icon class="save-icon" v-show="modifyState" @click="modifyState = false">
+            <el-icon class="save-icon" v-show="modifyState" @click="handleSave">
                 <Check :color="iconColor" v-show="idx == session.nowChoose" />
             </el-icon>
         </div>
@@ -27,6 +27,7 @@
 import { ChatDotSquare, EditPen, Delete, Check } from "@element-plus/icons-vue";
 import { useSessionStore } from '../stores/session';
 import { ref, watch, onMounted } from 'vue';
+import { retrieveHistoryStorage, refreshStorage } from "../utils/storage";
 const props = defineProps(['title', 'idx']);
 const title = defineModel('title');
 defineEmits(['delete-session', 'modify-session']);
@@ -46,6 +47,12 @@ const changeSession = () => {
 const handleEdit = () => {
     if (session.nowChoose != props.idx) return;
     modifyState.value = true;
+}
+const handleSave = () => {
+    modifyState.value = false;
+    let historyList = retrieveHistoryStorage();
+    historyList[props.idx].title = props.title;
+    refreshStorage(null, historyList);
 }
 
 watch(() => session.nowChoose, (newVal) => {

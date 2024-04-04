@@ -8,6 +8,12 @@
         <MessageBox 
             message="删除成功"
             :isShow="isShowDeleteSuccess"
+            type="success"
+        />
+        <MessageBox 
+            message="输入不可为空"
+            :isShow="isShowInputMustNotNull"
+            type="warning"
         />
         <div class="container-wrapper">
             <div class="chat-record-wrapper-father">
@@ -88,6 +94,7 @@ import { ElInput } from "element-plus";
 import { Promotion, ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
 import timeFormat from '../utils/timeFormat';
 import sleep from "../utils/sleep";
+import { retrieveChatStorage, retrieveHistoryStorage, refreshStorage } from "../utils/storage";
 
 const session = useSessionStore();
 
@@ -104,12 +111,10 @@ let sessionTitleInputNode = ref();
 let sessionTitle = ref("");
 let isShow = ref(false);  // 是否显示删除的遮罩层
 let isShowDeleteSuccess = ref(false); // 是否显示删除成功的提示
+let isShowInputMustNotNull = ref(false); // 输入空字符串的提示
 
 let msgList = reactive([]); // 是一个结构体数组，结构体中有时间、内容、需要渲染的组件（是UserMessage还是RobotMessage）
-let chatItemList = reactive([
-    { title: "NAGA X4的特性" },
-    { title: "第二个会话" },
-])
+let chatItemList = reactive([])
 
 //跳转到中航通官网
 const toZhtHome = () => {
@@ -177,12 +182,22 @@ const preAddSession = () => {
 // 新增会话
 const confirmAddSession = () => {
     let title = sessionTitle.value;
+    if (title.trim() == "") {
+        sessionTitle.value = "";
+        // 提示输入不可为空
+        isShowInputMustNotNull.value = true;
+        setTimeout(() => {
+            isShowInputMustNotNull.value = false;
+        }, 2000);
+        return;
+    }
     let newChatItem = {
-        title
+        title: title.trim()
     };
     chatItemList.unshift(newChatItem);
+    refreshStorage(null, chatItemList);
     addInputMargin.value = "-0.58667rem";
-    session.changeSession(0); // 将会话路由转移到新建的会话上
+    session.changeSession(0); // 将会话路由转移到新建的会话上 // TODO: 同时新增一个chat到storage中去
 }
 
 // 删除会话的前置操作
@@ -196,6 +211,7 @@ const preDelete = (idx) => {
 const deleteSession = (idx) => {
     let len = chatItemList.length;
     chatItemList.splice(idx, 1);
+    refreshStorage(null, chatItemList); // TODO: 这个地方同时要删除该chatItem里的chat数据
     isShow.value = false;
     if (idx == len - 1) { // 如果是删除的最后一个，则需要重新选择一个会话
         session.changeSession(idx - 1);
@@ -206,6 +222,13 @@ const deleteSession = (idx) => {
     setTimeout(() => {
         isShowDeleteSuccess.value = false;
     }, 2000);
+}
+
+const refreshChatItemList = () => {
+    let historyList = retrieveHistoryStorage();
+    for (let item of historyList) {
+        chatItemList.push(item);
+    }
 }
 
 watch(userInput, (newVal) => {
@@ -221,7 +244,7 @@ watch(userInput, (newVal) => {
 })
 
 onMounted(() => {
-
+    refreshChatItemList();
 })
 </script>
 

@@ -3,8 +3,14 @@
         <div class="message-root" v-show="isShow">
             <div class="message-box">
                 <div class="message-icon">
-                    <el-icon color="#67c23a">
+                    <el-icon color="#67c23a" v-if="type == 'success'">
                         <SuccessFilled />
+                    </el-icon>
+                    <el-icon color="#e6a23c" v-if="type == 'warning'">
+                        <WarningFilled/>
+                    </el-icon>
+                    <el-icon color="#f56c6c" v-if="type == 'error'">
+                        <WarningFilled/>
                     </el-icon>
                 </div>
                 <div class="message-content">
@@ -16,13 +22,24 @@
 </template>
 
 <script setup lang="js">
-import { SuccessFilled } from '@element-plus/icons-vue';
+let propObj = defineProps(['message', 'isShow', 'type']);
 
-defineProps(['message', 'isShow']);
+import { SuccessFilled, WarningFilled } from '@element-plus/icons-vue';
+import { ref, onMounted } from 'vue';
+
+let textColor = ref('#67c23a');
+
+onMounted(() => {
+    if (propObj.type == 'success') 
+        textColor.value = "#67c23a";
+    else if (propObj.type == 'warning')
+        textColor.value = "#e6a23c";
+    else if (propObj.type == 'error')
+        textColor.value = "#f56c6c";
+})
 </script>
 
 <style lang="scss" scoped>
-$green: #67c23a;
 .message-root {
     position: fixed;
     width: 100vw;
@@ -44,7 +61,7 @@ $green: #67c23a;
             align-items: center;
         }
         .message-content {
-            color: $green;
+            color: v-bind(textColor);
             font-size: 11px;
             margin-left: 3px;
         }
