@@ -28,8 +28,10 @@ import { ChatDotSquare, EditPen, Delete, Check } from "@element-plus/icons-vue";
 import { useSessionStore } from '../stores/session';
 import { ref, watch, onMounted } from 'vue';
 import { retrieveHistoryStorage, refreshStorage } from "../utils/storage";
+import { useRouter } from "vue-router";
 const props = defineProps(['title', 'idx']);
 const title = defineModel('title');
+const router = useRouter();
 defineEmits(['delete-session', 'modify-session']);
 
 const session = useSessionStore();

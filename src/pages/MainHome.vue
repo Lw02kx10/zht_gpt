@@ -54,49 +54,30 @@
                     </div>
                 </div>
             </div>
-            <div class="chat-context">
-                <div class="main-context">
-                    <el-scrollbar>
-                        <component v-for="(item, index) in msgList" :key="index" :time="item.time" :content="item.content" :is="item.component" class="chat-item"></component>
-                    </el-scrollbar>
-                </div>
-                <div class="text-input-line">
-                    <div class="input-wrapper">
-                        <el-input 
-                            v-model="userInput"
-                            :autosize = "{ maxRows:1 }"
-                            type="textarea"
-                            placeholder="请输入您的问题（Shift+Enter = 换行）"
-                            resize="none" 
-                            @keyup.enter="launchMsg"
-                        />
-                    </div>
-                    <div class="launch-btn-wrapper">
-                        <div class="launch-btn" @click="launchMsg">
-                            <Promotion color="#fff" />
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- <div class="chat-context"> -->
+                <!-- 该路由显示部分，为chat部分 -->
+                <keep-alive> 
+                    <router-view :key="route.fullPath" />
+                </keep-alive>
+            <!--  </div> -->
         </div>
     </div>
 </template>
 
 <script setup lang="js">
 import { ref, onMounted, reactive, watch } from "vue";
+import { useRoute } from "vue-router";
 import ChatItem from "../components/ChatItem.vue";
-import UserMessage from "../components/UserMessage.vue";
-import RobotMessage from "../components/RobotMessage.vue";
 import DialogOverlay from "../components/DialogOverlay.vue";
 import MessageBox from "../components/MessageBox.vue";
 import { useSessionStore } from "../stores/session";
-import { ElInput } from "element-plus";
-import { Promotion, ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
-import timeFormat from '../utils/timeFormat';
+import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
 import sleep from "../utils/sleep";
-import { retrieveChatStorage, retrieveHistoryStorage, refreshStorage } from "../utils/storage";
+import { retrieveChatStorage, retrieveHistoryStorage, 
+    refreshStorage, setChatIndex, getChatIndex } from "../utils/storage";
 
 const session = useSessionStore();
+const route = useRoute();
 
 let deleteIdx = 0; // 待删除的索引
 let userInput = ref("");
@@ -113,7 +94,6 @@ let isShow = ref(false);  // 是否显示删除的遮罩层
 let isShowDeleteSuccess = ref(false); // 是否显示删除成功的提示
 let isShowInputMustNotNull = ref(false); // 输入空字符串的提示
 
-let msgList = reactive([]); // 是一个结构体数组，结构体中有时间、内容、需要渲染的组件（是UserMessage还是RobotMessage）
 let chatItemList = reactive([])
 
 //跳转到中航通官网
@@ -122,33 +102,6 @@ const toZhtHome = () => {
     link.href = "https://www.zhtaero.com";
     link.target = "_blank";
     link.click();
-}
-
-// 发送信息
-const launchMsg = () => {
-    if (isDisableLaunch.value) return; // 不能发送空消息
-
-    const now = new Date();
-    const timeFormatStr = timeFormat(now);
-    const chatContent = userInput.value;
-    userInput.value = "";
-
-    let userMsg = {
-        time: timeFormatStr,
-        content: chatContent,
-        component: UserMessage,
-    }
-
-    msgList.push(userMsg);
-
-    // chatgpt作回复的逻辑写在这里
-    let robotMsg = {
-        time: timeFormatStr,
-        content: chatContent,
-        component: RobotMessage,
-    }
-
-    msgList.push(robotMsg);
 }
 
 // 切换布局
@@ -198,6 +151,7 @@ const confirmAddSession = () => {
     refreshStorage(null, chatItemList);
     addInputMargin.value = "-0.58667rem";
     session.changeSession(0); // 将会话路由转移到新建的会话上 // TODO: 同时新增一个chat到storage中去
+    setChatIndex(0);
 }
 
 // 删除会话的前置操作
@@ -215,6 +169,7 @@ const deleteSession = (idx) => {
     isShow.value = false;
     if (idx == len - 1) { // 如果是删除的最后一个，则需要重新选择一个会话
         session.changeSession(idx - 1);
+        setChatIndex(idx - 1);
     }
 
     // 提示删除成功
@@ -245,6 +200,10 @@ watch(userInput, (newVal) => {
 
 onMounted(() => {
     refreshChatItemList();
+    // 恢复上次选择的会话
+    let lastChooseIndex = getChatIndex();
+    setChatIndex(lastChooseIndex);
+    
 })
 </script>
 
@@ -399,52 +358,6 @@ $green: #6c6c6c;
                     transform: translate(50%, -50%);
                     cursor: pointer;
                     font-size: 10px;
-                }
-            }
-        }
-        .chat-context {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            .main-context {
-                flex-grow: 1;
-                background-image: url("../assets/logo.png");
-                background-size: 50%;
-                background-repeat: no-repeat;
-                background-position: center center;
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-            }
-            .text-input-line {
-                display: flex;
-                height: 40px;
-                border-top: 1px solid $gray;
-                flex-shrink: 0;
-                .input-wrapper {
-                    flex-grow: 1;
-                    display: flex;
-                    align-items: center;
-                    .el-textarea {
-                        height: 25px;
-                        margin-top: 2px;
-                        padding: 0 7px;
-                    }
-                }
-                .launch-btn-wrapper {
-                    width: 38px;
-                    .launch-btn {
-                        position: relative;
-                        top: 50%;
-                        transform: translateY(-50%);
-                        margin: 0 10px 0 0;
-                        background-color: v-bind(launchBtnColor);
-                        border-radius: 2px;
-                        cursor: v-bind(launchBtnCursor);
-                        svg {
-                            padding: 2px 6px;
-                        }
-                    }
                 }
             }
         }

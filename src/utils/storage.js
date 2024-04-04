@@ -36,4 +36,17 @@ export function retrieveHistoryStorage() {
     return (historyList == null) ? [] : historyList;
 }
 
+// 记录chat_id
+export function setChatIndex(index) {
+    const chatIndexKey = 'chatIndex';
+    localStorage.setItem(chatIndexKey, index);
+}
+
+// 获取用户刷新或关闭网页前停留在哪个chat_id
+export function getChatIndex() {
+    const chatIndexKey = 'chatIndex';
+    let chatIndex = localStorage.getItem(chatIndexKey);
+    return (chatIndex == null) ? 0 : chatIndex;
+}
+
 
