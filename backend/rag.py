@@ -4,7 +4,9 @@ import os
 from llama_index.prompts import ChatPromptTemplate, ChatMessage, MessageRole
 from llama_index.node_parser import SentenceWindowNodeParser
 from llama_index import SimpleDirectoryReader, VectorStoreIndex, StorageContext, load_index_from_storage
-from llama_index.postprocessor import  SentenceTransformerRerank
+from llama_index.postprocessor import SentenceTransformerRerank
+from llama_index.llms import OpenAI
+from llama_index import ServiceContext, set_global_service_context
 from typing import *
 
 QA_PROMPT_TMPL_STR = (
@@ -37,6 +39,10 @@ class RAGRobot:
         self.node_parser = None
         self.index = None
         self.query_engine = None
+        service_context = ServiceContext.from_defaults(
+            llm=OpenAI(model="gpt-3.5-turbo", temperature=0.01, max_tokens=1023),
+        )
+        set_global_service_context(service_context)
 
     def _build_sentence_splitter(self, pattern: str) -> None:
         self.sentence_splitter = lambda text: re.findall(pattern, text)
@@ -88,6 +94,12 @@ class RAGRobot:
         )
         self.query_engine._response_synthesizer._refine_template.conditionals[0][1].message_templates[
             0].content = REFINE_PROMPT_TMPL_STR
+
+    def query(self, question: str) -> str:
+        if question.endswith('?') or question.endswith('？'):
+            question = question[:-1]
+        res = self.query_engine.query(question)
+        return res
 
     def run(self):
         self._build_sentence_splitter("[^。；，;]+[。；，;]?")
