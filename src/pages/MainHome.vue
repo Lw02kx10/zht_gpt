@@ -50,7 +50,9 @@
             </div>
             <div class="chat-context">
                 <div class="main-context">
-                    <component v-for="(item, index) in msgList" :key="index" :time="item.time" :content="item.content" :is="item.component"></component>
+                    <el-scrollbar>
+                        <component v-for="(item, index) in msgList" :key="index" :time="item.time" :content="item.content" :is="item.component" class="chat-item"></component>
+                    </el-scrollbar>
                 </div>
                 <div class="text-input-line">
                     <div class="input-wrapper">
@@ -389,11 +391,13 @@ $green: #6c6c6c;
                 background-position: center center;
                 display: flex;
                 flex-direction: column;
+                overflow: hidden;
             }
             .text-input-line {
                 display: flex;
                 height: 40px;
                 border-top: 1px solid $gray;
+                flex-shrink: 0;
                 .input-wrapper {
                     flex-grow: 1;
                     display: flex;
