@@ -66,18 +66,21 @@
 
 <script setup lang="js">
 import { ref, onMounted, reactive, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import ChatItem from "../components/ChatItem.vue";
 import DialogOverlay from "../components/DialogOverlay.vue";
 import MessageBox from "../components/MessageBox.vue";
 import { useSessionStore } from "../stores/session";
 import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
 import sleep from "../utils/sleep";
-import { retrieveChatStorage, retrieveHistoryStorage, 
-    refreshStorage, setChatIndex, getChatIndex } from "../utils/storage";
+import { v4 as uuidv4 } from 'uuid';
+import { retrieveHistoryStorage, 
+    refreshStorage, setChatIndex, getChatIndex,
+    setChatIndexList, getChatIndexList } from "../utils/storage";
 
 const session = useSessionStore();
 const route = useRoute();
+const router = useRouter();
 
 let deleteIdx = 0; // 待删除的索引
 let userInput = ref("");
@@ -94,7 +97,7 @@ let isShow = ref(false);  // 是否显示删除的遮罩层
 let isShowDeleteSuccess = ref(false); // 是否显示删除成功的提示
 let isShowInputMustNotNull = ref(false); // 输入空字符串的提示
 
-let chatItemList = reactive([])
+let chatItemList = reactive([]);
 
 //跳转到中航通官网
 const toZhtHome = () => {
@@ -150,13 +153,17 @@ const confirmAddSession = () => {
     chatItemList.unshift(newChatItem);
     refreshStorage(null, chatItemList);
     addInputMargin.value = "-0.58667rem";
-    session.changeSession(0); // 将会话路由转移到新建的会话上 // TODO: 同时新增一个chat到storage中去
-    setChatIndex(0);
+    
+    let newChatId = uuidv4();
+    session.chatIdList.unshift(newChatId);
+    setChatIndexList(session.chatIdList);
+    session.changeSession(newChatId); // 将会话路由转移到新建的会话上 // TODO: 同时新增一个chat到storage中去
+    setChatIndex(newChatId);
 }
 
 // 删除会话的前置操作
 const preDelete = (idx) => {
-    if (idx != session.nowChoose) return;
+    if (session.chatIdList[idx] != session.nowChoose) return;
     isShow.value = true;
     deleteIdx = idx;
 }
@@ -164,13 +171,27 @@ const preDelete = (idx) => {
 // 删除会话
 const deleteSession = (idx) => {
     let len = chatItemList.length;
-    chatItemList.splice(idx, 1);
-    refreshStorage(null, chatItemList); // TODO: 这个地方同时要删除该chatItem里的chat数据
     isShow.value = false;
     if (idx == len - 1) { // 如果是删除的最后一个，则需要重新选择一个会话
-        session.changeSession(idx - 1);
-        setChatIndex(idx - 1);
+        if (idx == 0) { // 只剩这一个了
+            router.push('/home'); // 回首页
+        } else { // 否则选择上一个会话
+            session.changeSession(session.chatIdList[idx-1]);
+            setChatIndex(session.chatIdList[idx-1]);
+        }
+    } else { // 否则选择下一个会话
+        if (len == 1) { // 只剩这一个
+            router.push('/home');
+        } else {
+            session.changeSession(session.chatIdList[idx+1]);
+            setChatIndex(session.chatIdList[idx+1]);
+        }
     }
+
+    chatItemList.splice(idx, 1);
+    session.chatIdList.splice(idx, 1);
+    setChatIndexList(session.chatIdList);
+    refreshStorage(null, chatItemList); // TODO: 这个地方同时要删除该chatItem里的chat数据
 
     // 提示删除成功
     isShowDeleteSuccess.value = true;
@@ -202,8 +223,15 @@ onMounted(() => {
     refreshChatItemList();
     // 恢复上次选择的会话
     let lastChooseIndex = getChatIndex();
-    setChatIndex(lastChooseIndex);
-    
+    // 获取用户拥有的所有会话列表
+    let storageChatList = getChatIndexList();
+    session.chatIdList = storageChatList;    
+
+    let findRes = storageChatList.find((item) => item == lastChooseIndex);
+    if (findRes != undefined) {
+        session.changeSession(lastChooseIndex);
+        setChatIndex(lastChooseIndex);
+    }
 })
 </script>
 

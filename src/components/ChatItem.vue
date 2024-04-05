@@ -11,13 +11,13 @@
                 <input type="text" v-model="title" />
             </div>
             <el-icon class="edit-icon" @click="handleEdit" v-show="!modifyState">
-                <EditPen :color="iconColor" v-show="idx == session.nowChoose" />
+                <EditPen :color="iconColor" v-show="session.chatIdList[idx] == session.nowChoose" />
             </el-icon>
             <el-icon class="delete-icon" @click="$emit('delete-session')" v-show="!modifyState">
-                <Delete :color="iconColor" v-show="idx == session.nowChoose"/>
+                <Delete :color="iconColor" v-show="session.chatIdList[idx] == session.nowChoose"/>
             </el-icon>
             <el-icon class="save-icon" v-show="modifyState" @click="handleSave">
-                <Check :color="iconColor" v-show="idx == session.nowChoose" />
+                <Check :color="iconColor" v-show="session.chatIdList[idx] == session.nowChoose" />
             </el-icon>
         </div>
     </div>
@@ -44,10 +44,10 @@ let titleNode = ref();
 let inputNode = ref();
 
 const changeSession = () => {
-    session.changeSession(props.idx);
+    session.changeSession(session.chatIdList[props.idx]);
 }
 const handleEdit = () => {
-    if (session.nowChoose != props.idx) return;
+    if (session.nowChoose != session.chatIdList[props.idx]) return;
     modifyState.value = true;
 }
 const handleSave = () => {
@@ -58,7 +58,7 @@ const handleSave = () => {
 }
 
 watch(() => session.nowChoose, (newVal) => {
-    if (newVal == Number(props.idx)) {
+    if (newVal == session.chatIdList[props.idx]) {
         wrapperBgc.value = "#f5f5f5";
         iconColor.value = "#6c6c6c";
         textColor.value = "#6c6c6c";

@@ -36,7 +36,7 @@ export function retrieveHistoryStorage() {
     return (historyList == null) ? [] : historyList;
 }
 
-// 记录chat_id
+// 记录停留的chat_id
 export function setChatIndex(index) {
     const chatIndexKey = 'chatIndex';
     localStorage.setItem(chatIndexKey, index);
@@ -47,6 +47,19 @@ export function getChatIndex() {
     const chatIndexKey = 'chatIndex';
     let chatIndex = localStorage.getItem(chatIndexKey);
     return (chatIndex == null) ? 0 : chatIndex;
+}
+
+// 存储chat_id列表
+export function setChatIndexList(list) {
+    const chatIndexListKey = 'chatIndexList';
+    localStorage.setItem(chatIndexListKey, JSON.stringify(list));
+}
+
+// 获取chat_id列表
+export function getChatIndexList() {
+    const chatIndexListKey = 'chatIndexList';
+    let chatIndexListJson = localStorage.getItem(chatIndexListKey);
+    return (chatIndexListJson == null) ? [] : JSON.parse(chatIndexListJson);
 }
 
 
