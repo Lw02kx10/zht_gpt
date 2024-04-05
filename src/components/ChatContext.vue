@@ -3,7 +3,7 @@
         <div class="main-context">
             <el-scrollbar>
                 <component v-for="(item, index) in msgList" :key="index" 
-                :time="item.dateTime" :content="item.content" :is="item.isUser ? UserMessage : RobotMessage" class="chat-item"></component>
+                :time="item.dateTime" :content="item.content" :loading="item.loading" :is="item.isUser ? UserMessage : RobotMessage" class="chat-item"></component>
             </el-scrollbar>
         </div>
         <div class="text-input-line">
@@ -57,7 +57,8 @@ const launchMsg = () => {
     if (isDisableLaunch.value) return; // 不能发送空消息
 
     const chatIdx = session.nowChoose;
-    const now = new Date();
+    
+    let now = new Date();
     const timeFormatStr = timeFormat(now);
     const chatContent = userInput.value;
     userInput.value = "";
@@ -71,6 +72,18 @@ const launchMsg = () => {
     }
 
     msgList.push(userMsg);
+    
+    // 先生成一个回复框，暂时不写内容，表示正在等待响应
+    now = new Date();
+    const robotReplyTime = timeFormat(now);
+    let robotMsg = {
+        isUser: false,
+        content: ' ',
+        dateTime: robotReplyTime,
+        error: false,
+        loading: true,
+    }
+    msgList.push(robotMsg);
 
     // chatgpt作回复的逻辑写在这里
     const reqPath = devEnv + '/query?text=' + userMsg.content;
@@ -80,14 +93,11 @@ const launchMsg = () => {
         console.log("open");
         const now = new Date();
         const robotReplyTime = timeFormat(now);
-        let robotMsg = {
-            isUser: false,
-            content: '',
-            dateTime: robotReplyTime,
-            error: false,
-            loading: false,
-        }
-        msgList.push(robotMsg);
+
+        let len = msgList.length;
+        msgList[len-1].loading = false;
+        msgList[len-1].dateTime = robotReplyTime;
+        msgList[len-1].content = "";
     }
 
     source.onmessage = e => {
@@ -157,6 +167,7 @@ $gray: #e5e7eb;
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        padding-bottom: 25px;
     }
     .text-input-line {
         display: flex;

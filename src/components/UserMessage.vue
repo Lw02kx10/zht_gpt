@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="js">
-defineProps(['time', 'content']);
+defineProps(['time', 'content', 'loading']);
 </script>
 
 <style lang="scss" scoped>

@@ -10,14 +10,17 @@
                 <span>{{ time }}</span>
             </div>
             <div class="msg-content">
-                <span>{{ content }}</span>
+                <div class="simulation-cursor" v-show="loading == true"> </div>
+                <div class="text-content">
+                    <span>{{ content }}</span>
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang="js">
-defineProps(['time', 'content']);
+defineProps(['time', 'content', 'loading']);
 </script>
 
 <style lang="scss" scoped>
@@ -48,11 +51,32 @@ defineProps(['time', 'content']);
             font-size: 9px;
         }
         .msg-content {
+            display: flex;
             background-color: #f4f6f8;
             padding: 7px;
             border-radius: 3px;
             font-size: 10px;
+            .simulation-cursor {
+                width: 2.5px;
+                opacity: 1;
+                background-color: #000000;
+                animation: 0.7s linear infinite simu-cursor;
+            }
+            .text-content {
+                span:before {
+                    content: "\00a0";
+                }
+            }
         }
+    }
+}
+
+@keyframes simu-cursor {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
     }
 }
 </style>

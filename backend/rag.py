@@ -10,7 +10,7 @@ from llama_index import ServiceContext, set_global_service_context
 from typing import *
 
 QA_PROMPT_TMPL_STR = (
-    "请你仔细阅读相关内容，结合公司资料库进行回答，如果答案有很多条，你应该回答完每条之后换行，如果发现资料无法得到答案，就回答不知道\n"
+    "请你仔细阅读相关内容，结合公司资料库进行回答，如果发现资料无法得到答案，就回答这个问题或许与中航通公司无关，请问一些其他问题\n"
     "搜索的相关公司资料如下所示：\n"
     "----------------------\n"
     "{context_str}\n"
@@ -21,16 +21,16 @@ QA_PROMPT_TMPL_STR = (
 QA_SYSTEM_PROMPT = ("你是中航通无人机创新公司的一个客服机器人，是一个严谨的公司资料信息问答智能体，"
                     "你会仔细阅读公司资料并给出准确的回答，你的回答都会非常准确")
 
-REFINE_PROMPT_TMPL_STR = (
-    "你是一个公司资料信息问答修正机器人，你严格按以下方式工作"
-    "1.只有原答案为不知道时才进行修正,否则输出原答案的内容\n"
-    "2.修正的时候为了体现你的精准和客观，你非常喜欢使用[]将公司资料的原文展示出来.\n"
-    "3.如果感到疑惑的时候，就用原答案的内容回答。"
-    "新的知识: {context_msg}\n"
-    "问题: {query_str}\n"
-    "原答案: {existing_answer}\n"
-    "新答案: "
-)
+# REFINE_PROMPT_TMPL_STR = (
+#     "你是一个公司资料信息问答修正机器人，你严格按以下方式工作"
+#     "1.只有原答案为不知道时才进行修正,否则输出原答案的内容\n"
+#     "2.修正的时候为了体现你的精准和客观，你非常喜欢使用[]将公司资料的原文展示出来.\n"
+#     "3.如果感到疑惑的时候，就用原答案的内容回答。"
+#     "新的知识: {context_msg}\n"
+#     "问题: {query_str}\n"
+#     "原答案: {existing_answer}\n"
+#     "新答案: "
+# )
 
 
 class RAGRobot:
@@ -40,7 +40,7 @@ class RAGRobot:
         self.index = None
         self.query_engine = None
         service_context = ServiceContext.from_defaults(
-            llm=OpenAI(model="gpt-3.5-turbo", temperature=0.05, max_tokens=1024),
+            llm=OpenAI(model="gpt-3.5-turbo", temperature=0.01, max_tokens=1024),
         )
         set_global_service_context(service_context)
 
@@ -93,8 +93,8 @@ class RAGRobot:
         self.query_engine.update_prompts(
             {"response_synthesizer:text_qa_template": chat_template}
         )
-        self.query_engine._response_synthesizer._refine_template.conditionals[0][1].message_templates[
-            0].content = REFINE_PROMPT_TMPL_STR
+        # self.query_engine._response_synthesizer._refine_template.conditionals[0][1].message_templates[
+        #    0].content = REFINE_PROMPT_TMPL_STR
 
     def query(self, question: str) -> Generator[str, None, None]:  # 返回一个generator对象
         if question.endswith('?') or question.endswith('？'):
@@ -106,7 +106,7 @@ class RAGRobot:
         self._build_sentence_splitter("[^。；，;]+[。；，;]?")
         self._build_node_parser(3, "window", "original_text")
         self._build_index("./data", "./storage")
-        self._build_query_engine(20)
+        self._build_query_engine(8)
 
 
 
