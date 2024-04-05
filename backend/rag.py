@@ -10,7 +10,7 @@ from llama_index import ServiceContext, set_global_service_context
 from typing import *
 
 QA_PROMPT_TMPL_STR = (
-    "请你仔细阅读相关内容，结合公司资料库进行回答，如果发现资料无法得到答案，就回答不知道\n"
+    "请你仔细阅读相关内容，结合公司资料库进行回答，如果答案有很多条，你应该回答完每条之后换行，如果发现资料无法得到答案，就回答不知道\n"
     "搜索的相关公司资料如下所示：\n"
     "----------------------\n"
     "{context_str}\n"
@@ -40,7 +40,7 @@ class RAGRobot:
         self.index = None
         self.query_engine = None
         service_context = ServiceContext.from_defaults(
-            llm=OpenAI(model="gpt-3.5-turbo", temperature=0.01, max_tokens=1023),
+            llm=OpenAI(model="gpt-3.5-turbo", temperature=0.05, max_tokens=1024),
         )
         set_global_service_context(service_context)
 
@@ -80,6 +80,7 @@ class RAGRobot:
         self.query_engine = self.index.as_query_engine(
             node_postprocessors=[postprocessor],
             similarity_top_k=top_k,
+            streaming=True,
         )
 
         # 定义robot提示信息
@@ -95,17 +96,17 @@ class RAGRobot:
         self.query_engine._response_synthesizer._refine_template.conditionals[0][1].message_templates[
             0].content = REFINE_PROMPT_TMPL_STR
 
-    def query(self, question: str) -> str:
+    def query(self, question: str) -> Generator[str, None, None]:  # 返回一个generator对象
         if question.endswith('?') or question.endswith('？'):
             question = question[:-1]
-        res = self.query_engine.query(question)
-        return res
+        res_stream = self.query_engine.query(question)
+        return res_stream.response_gen
 
     def run(self):
         self._build_sentence_splitter("[^。；，;]+[。；，;]?")
         self._build_node_parser(3, "window", "original_text")
         self._build_index("./data", "./storage")
-        self._build_query_engine(10)
+        self._build_query_engine(20)
 
 
 

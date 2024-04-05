@@ -1,27 +1,31 @@
 import json
 
-from flask import Flask, request
+from flask import Flask, request, Response, stream_with_context
 from flask_cors import CORS
 from typing import *
-from utils.rsp import generate_success_rsp, generate_bad_request_rsp
+from utils.rsp import generate_bad_request_rsp
 from rag import RAGRobot
 
 app = Flask(__name__)
 CORS(app, origins="http://172.23.148.156:3000/*")
 
+
 @app.route('/query', methods=["GET"])
-def handle_query() -> Dict:
+def handle_query() -> Any:
     query_text = request.args.get("text", None)
     if query_text is None:
         return generate_bad_request_rsp()
-    response_text = rag.query(query_text)
+    res_gen: Generator[str, None, None] = rag.query(query_text)
 
-    res_dic = generate_success_rsp({
-        "ans": str(response_text)
-    })
+    def event_stream():
+        for text in res_gen:
+            json_data = json.dumps({'ans': text})
+            yield f"data:{json_data}\n\n"
 
-    res = json.dumps(res_dic)
-    return res
+    response = Response(stream_with_context(event_stream()), mimetype="text/event-stream")
+    response.headers["Cache-Control"] = "no-cache"
+    response.headers["X-Accel-Buffering"] = "no"
+    return response
 
 
 if __name__ == "__main__":

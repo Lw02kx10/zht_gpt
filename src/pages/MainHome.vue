@@ -286,6 +286,7 @@ $green: #6c6c6c;
         display: flex;
         .chat-record-wrapper-father { // 添加chat-record-wrapper-father是为了让left:-100%相对于父容器进行定位
             display: flex;
+            flex-shrink: 0;
             overflow: v-bind(leftBarHidden);
             .chat-record-wrapper { // 添加chat-record-wrapper的作用是让toggle-btn相对于这里定位
                 display: flex;

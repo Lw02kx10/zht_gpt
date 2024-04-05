@@ -28,16 +28,15 @@
 </template>
 
 <script setup lang="js">
-import { ref, watch, reactive, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import axios from 'axios';
+import { ref, watch, onMounted, reactive } from 'vue';
 import UserMessage from "./UserMessage.vue";
 import RobotMessage from "./RobotMessage.vue";
+import { useRoute } from 'vue-router';
 import timeFormat from '../utils/timeFormat';
 import { ElInput, ElScrollbar } from "element-plus";
 import { Promotion } from '@element-plus/icons-vue';
 import { useSessionStore } from "../stores/session";
-import { getChatIndexList, retrieveChatStorage, refreshStorage,
+import { retrieveChatStorage, refreshStorage,
     retrieveTotalChatList, getChatIndex } from "../utils/storage";
 
 const session = useSessionStore();
@@ -74,24 +73,35 @@ const launchMsg = () => {
     msgList.push(userMsg);
 
     // chatgpt作回复的逻辑写在这里
-    axios.get(devEnv + '/query?text=' + userMsg.content).then(res => {
-        // console.log(res);
-        const robotAns = res.data.data.ans;
+    const reqPath = devEnv + '/query?text=' + userMsg.content;
+    const source = new EventSource(reqPath);
+
+    source.onopen = e => {
+        console.log("open");
         const now = new Date();
         const robotReplyTime = timeFormat(now);
         let robotMsg = {
             isUser: false,
-            content: robotAns,
+            content: '',
             dateTime: robotReplyTime,
             error: false,
             loading: false,
         }
-
         msgList.push(robotMsg);
-        
+    }
+
+    source.onmessage = e => {
+        let data = JSON.parse(e.data);
+        let len = msgList.length;
+        // console.log(data.ans);
+        msgList[len - 1].content += data.ans;
+    }
+    
+    source.onerror = e => {
+        source.close();
         session.chatList[chatIdx] = msgList;
         refreshStorage(session.chatList, null);
-    })
+    }
 }
 
 // 切换路由时用于重新刷新页面数据
