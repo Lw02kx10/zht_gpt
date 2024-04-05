@@ -78,7 +78,7 @@ const launchMsg = () => {
     const robotReplyTime = timeFormat(now);
     let robotMsg = {
         isUser: false,
-        content: ' ',
+        content: '',
         dateTime: robotReplyTime,
         error: false,
         loading: true,

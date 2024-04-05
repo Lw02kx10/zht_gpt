@@ -10,7 +10,7 @@ from llama_index import ServiceContext, set_global_service_context
 from typing import *
 
 QA_PROMPT_TMPL_STR = (
-    "请你仔细阅读相关内容，结合公司资料库进行回答，如果发现资料无法得到答案，就回答这个问题或许与中航通公司无关，请问一些其他问题\n"
+    "请你仔细阅读相关内容，结合公司资料库用中文进行回答，如果发现资料无法得到答案，就回答这个问题或许与中航通公司无关，请问一些其他问题\n"
     "搜索的相关公司资料如下所示：\n"
     "----------------------\n"
     "{context_str}\n"
@@ -103,10 +103,10 @@ class RAGRobot:
         return res_stream.response_gen
 
     def run(self):
-        self._build_sentence_splitter("[^。；，;]+[。；，;]?")
+        self._build_sentence_splitter("[^。|]+[。|]?")
         self._build_node_parser(3, "window", "original_text")
         self._build_index("./data", "./storage")
-        self._build_query_engine(8)
+        self._build_query_engine(10)
 
 
 
