@@ -9,6 +9,7 @@
         <div class="text-input-line">
             <div class="input-wrapper">
                 <el-input 
+                    ref="inputNode"
                     v-model="userInput"
                     :autosize = "{ maxRows:1 }"
                     type="textarea"
@@ -28,6 +29,7 @@
 
 <script setup lang="js">
 import { ref, watch, reactive, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import UserMessage from "./UserMessage.vue";
 import RobotMessage from "./RobotMessage.vue";
 import timeFormat from '../utils/timeFormat';
@@ -38,15 +40,16 @@ import { getChatIndexList, retrieveChatStorage, refreshStorage,
     retrieveTotalChatList, getChatIndex } from "../utils/storage";
 
 const session = useSessionStore();
+const route = useRoute();
 
 let userInput = ref("");
+let inputNode = ref();
 let isDisableLaunch = ref(true); // 是否禁止发送
 let launchBtnColor = ref("rgba(108, 108, 108, 0.6)");
 let launchBtnCursor = ref("not-allowed");
 
 let msgList = reactive([]); // 是一个结构体数组，结构体中有时间、内容、需要渲染的组件（是UserMessage还是RobotMessage）
 
-let chatIndexList = [];
 
 // 发送信息
 const launchMsg = () => {
@@ -57,8 +60,6 @@ const launchMsg = () => {
     const timeFormatStr = timeFormat(now);
     const chatContent = userInput.value;
     userInput.value = "";
-
-    let chatList = session.chatList;
 
     let userMsg = {
         isUser: true,
@@ -80,24 +81,27 @@ const launchMsg = () => {
     }
 
     msgList.push(robotMsg);
-
-    // 寻找当前会话的列表
-    let chatItem = chatList.find((item) => {
-        return item.chatIndex === chatIdx;
-    })
-    let idx = chatIndexList.find((item) => item === chatIdx); // 找到应该插入的位置
     
-    if (chatItem != undefined) { // 如果已存在聊天信息
-        session.chatList.data = msgList;
-    } else { // 不存在聊天信息则添加
-        let newChatItem = {
-            chatIndex: chatIdx,
-            data: msgList,
-        }
-
-        session.chatList.splice(idx, 0, newChatItem);
-    }
+    session.chatList[chatIdx] = msgList;
     refreshStorage(session.chatList, null);
+}
+
+// 切换路由时用于重新刷新页面数据
+const refreshInfo = () => {
+    inputNode.value.focus();
+    msgList.length = 0; // 先清空msgList数组
+    // 恢复该会话的聊天内容
+    if (session.nowChoose == '') session.nowChoose = getChatIndex();
+    const chatIdx = session.nowChoose;
+    const chatItem = retrieveChatStorage(chatIdx);
+    let len = 0;
+    if (chatItem != null) {
+        len = chatItem.length;
+        for (let i=0; i<len; i++)
+            msgList.push(chatItem[i]);
+    }
+    
+    session.chatList = retrieveTotalChatList();
 }
 
 watch(userInput, (newVal) => {
@@ -111,23 +115,12 @@ watch(userInput, (newVal) => {
         launchBtnCursor.value = "pointer";
     }
 })
+watch(() => route.params.chat_id, () => {
+    refreshInfo();
+})
 
 onMounted(() => {
-    chatIndexList = getChatIndexList();
-    // 恢复该会话的聊天内容
-    if (session.nowChoose == '') session.nowChoose = getChatIndex();
-    const chatIdx = session.nowChoose;
-    const idx = chatIndexList.findIndex(item => item === chatIdx);
-    const chatItem = retrieveChatStorage(idx);
-    let len = 0;
-    if (chatItem != null)
-        len = chatItem.data.length;
-    
-    for (let i=0; i<len; i++)
-        msgList.push(chatItem.data[i]);
-    if (session.chatList == []) // 为空时才更新全局状态，否则不重复执行
-        session.chatList = retrieveTotalChatList();
-    
+    refreshInfo();
 })
 </script>
 

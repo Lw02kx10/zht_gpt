@@ -76,7 +76,7 @@ import sleep from "../utils/sleep";
 import { v4 as uuidv4 } from 'uuid';
 import { retrieveHistoryStorage, 
     refreshStorage, setChatIndex, getChatIndex,
-    setChatIndexList, getChatIndexList } from "../utils/storage";
+    setChatIndexList, getChatIndexList, retrieveTotalChatList, clearChatListDebug } from "../utils/storage";
 
 const session = useSessionStore();
 const route = useRoute();
@@ -137,6 +137,7 @@ const preAddSession = () => {
 
 // 新增会话
 const confirmAddSession = () => {
+    // clearChatListDebug();
     let title = sessionTitle.value;
     if (title.trim() == "") {
         sessionTitle.value = "";
@@ -156,6 +157,12 @@ const confirmAddSession = () => {
     
     let newChatId = uuidv4();
     session.chatIdList.unshift(newChatId);
+
+    // 更新chatList
+    session.chatList = retrieveTotalChatList();
+    session.chatList[newChatId] = []; // 新增一个对话信息列表
+    refreshStorage(session.chatList, null);
+
     setChatIndexList(session.chatIdList);
     session.changeSession(newChatId); // 将会话路由转移到新建的会话上 // TODO: 同时新增一个chat到storage中去
     setChatIndex(newChatId);
@@ -171,27 +178,34 @@ const preDelete = (idx) => {
 // 删除会话
 const deleteSession = (idx) => {
     let len = chatItemList.length;
+    let isGoHome = false;
     isShow.value = false;
     if (idx == len - 1) { // 如果是删除的最后一个，则需要重新选择一个会话
         if (idx == 0) { // 只剩这一个了
-            router.push('/home'); // 回首页
+            isGoHome = true; // 回首页
         } else { // 否则选择上一个会话
             session.changeSession(session.chatIdList[idx-1]);
             setChatIndex(session.chatIdList[idx-1]);
         }
     } else { // 否则选择下一个会话
         if (len == 1) { // 只剩这一个
-            router.push('/home');
+            isGoHome = true;
         } else {
             session.changeSession(session.chatIdList[idx+1]);
             setChatIndex(session.chatIdList[idx+1]);
         }
     }
 
+    // 删除这个会话中的聊天信息
+    delete session.chatList[session.chatIdList[idx]];
+
+    // 注意这里的先后顺序
     chatItemList.splice(idx, 1);
+    refreshStorage(session.chatList, chatItemList);
     session.chatIdList.splice(idx, 1);
     setChatIndexList(session.chatIdList);
-    refreshStorage(null, chatItemList); // TODO: 这个地方同时要删除该chatItem里的chat数据
+
+    if (isGoHome) router.push("/home");
 
     // 提示删除成功
     isShowDeleteSuccess.value = true;

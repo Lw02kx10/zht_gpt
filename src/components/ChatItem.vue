@@ -29,9 +29,12 @@ import { useSessionStore } from '../stores/session';
 import { ref, watch, onMounted } from 'vue';
 import { retrieveHistoryStorage, refreshStorage } from "../utils/storage";
 import { useRouter } from "vue-router";
+import { setChatIndex } from '../utils/storage';
+
 const props = defineProps(['title', 'idx']);
 const title = defineModel('title');
 const router = useRouter();
+
 defineEmits(['delete-session', 'modify-session']);
 
 const session = useSessionStore();
@@ -45,6 +48,7 @@ let inputNode = ref();
 
 const changeSession = () => {
     session.changeSession(session.chatIdList[props.idx]);
+    setChatIndex(session.chatIdList[props.idx]);
 }
 const handleEdit = () => {
     if (session.nowChoose != session.chatIdList[props.idx]) return;

@@ -1,22 +1,20 @@
 // 刷新localStorage
 /*
     chatList的数据结构如下：
-    chatList: [
-        {
-            chatIndex: string,   该session的uuid，用于查询
-            data: [
-                {
-                    isUser: bool,  用户或机器人的信息
-                    content: string,  具体文字内容
-                    dateTime: string, 信息发送时间
-                    error: bool,  是否发送失败
-                    loading: bool, 仅针对于机器人信息，是否正在等待响应
-                }    
-                ...   
-            ]
-        }
+    chatList: {
+        // chatIndex为某会话的uuid
+        chatIndex: [ 
+            {
+                isUser: bool,  用户或机器人的信息
+                content: string,  具体文字内容
+                dateTime: string, 信息发送时间
+                error: bool,  是否发送失败
+                loading: bool, 仅针对于机器人信息，是否正在等待响应
+            }    
+            ...   
+        ]
         ...
-    ]
+    }
 */
 
 export function refreshStorage(chatList, historyList) {
@@ -37,13 +35,13 @@ export function refreshStorage(chatList, historyList) {
 }
 
 // 获取localStorage中存储的chatList中的某条数据
-export function retrieveChatStorage(index) {
+export function retrieveChatStorage(chatIndex) {
     const chatKey = 'chatInfo';
 
     let jsonChatStr = localStorage.getItem(chatKey);
     let chatList = JSON.parse(jsonChatStr);
 
-    return (jsonChatStr == null) ? null : chatList[index];
+    return (jsonChatStr == null) ? null : chatList[chatIndex];
 }
 
 // 获取localStorage中的整个chatList
@@ -52,7 +50,7 @@ export function retrieveTotalChatList() {
     let jsonChatStr = localStorage.getItem(chatKey);
     let chatList = JSON.parse(jsonChatStr);
 
-    return (jsonChatStr == null) ? [] : chatList;
+    return (jsonChatStr == null) ? {} : chatList;
 }
 
 // 获取localStorage中存储的historyList数据
@@ -89,6 +87,14 @@ export function getChatIndexList() {
     const chatIndexListKey = 'chatIndexList';
     let chatIndexListJson = localStorage.getItem(chatIndexListKey);
     return (chatIndexListJson == null) ? [] : JSON.parse(chatIndexListJson);
+}
+
+
+// -------------- debug --------------
+// 清除整个chatList（debug用）
+export function clearChatListDebug() {
+    const key = 'chatInfo';
+    localStorage.removeItem(key);
 }
 
 
