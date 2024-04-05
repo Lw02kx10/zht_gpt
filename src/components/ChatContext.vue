@@ -3,7 +3,7 @@
         <div class="main-context">
             <el-scrollbar>
                 <component v-for="(item, index) in msgList" :key="index" 
-                :time="item.time" :content="item.content" :is="item.component" class="chat-item"></component>
+                :time="item.dateTime" :content="item.content" :is="item.isUser ? UserMessage : RobotMessage" class="chat-item"></component>
             </el-scrollbar>
         </div>
         <div class="text-input-line">
@@ -27,12 +27,17 @@
 </template>
 
 <script setup lang="js">
-import { ref, watch, reactive } from 'vue';
+import { ref, watch, reactive, onMounted } from 'vue';
 import UserMessage from "./UserMessage.vue";
 import RobotMessage from "./RobotMessage.vue";
 import timeFormat from '../utils/timeFormat';
 import { ElInput, ElScrollbar } from "element-plus";
 import { Promotion } from '@element-plus/icons-vue';
+import { useSessionStore } from "../stores/session";
+import { getChatIndexList, retrieveChatStorage, refreshStorage,
+    retrieveTotalChatList, getChatIndex } from "../utils/storage";
+
+const session = useSessionStore();
 
 let userInput = ref("");
 let isDisableLaunch = ref(true); // 是否禁止发送
@@ -41,31 +46,58 @@ let launchBtnCursor = ref("not-allowed");
 
 let msgList = reactive([]); // 是一个结构体数组，结构体中有时间、内容、需要渲染的组件（是UserMessage还是RobotMessage）
 
+let chatIndexList = [];
+
 // 发送信息
 const launchMsg = () => {
     if (isDisableLaunch.value) return; // 不能发送空消息
 
+    const chatIdx = session.nowChoose;
     const now = new Date();
     const timeFormatStr = timeFormat(now);
     const chatContent = userInput.value;
     userInput.value = "";
 
+    let chatList = session.chatList;
+
     let userMsg = {
-        time: timeFormatStr,
+        isUser: true,
         content: chatContent,
-        component: UserMessage,
+        dateTime: timeFormatStr,
+        error: false,
+        loading: false,
     }
 
     msgList.push(userMsg);
 
     // chatgpt作回复的逻辑写在这里
     let robotMsg = {
-        time: timeFormatStr,
+        isUser: false,
         content: chatContent,
-        component: RobotMessage,
+        dateTime: timeFormatStr,
+        error: false,
+        loading: false,
     }
 
     msgList.push(robotMsg);
+
+    // 寻找当前会话的列表
+    let chatItem = chatList.find((item) => {
+        return item.chatIndex === chatIdx;
+    })
+    let idx = chatIndexList.find((item) => item === chatIdx); // 找到应该插入的位置
+    
+    if (chatItem != undefined) { // 如果已存在聊天信息
+        session.chatList.data = msgList;
+    } else { // 不存在聊天信息则添加
+        let newChatItem = {
+            chatIndex: chatIdx,
+            data: msgList,
+        }
+
+        session.chatList.splice(idx, 0, newChatItem);
+    }
+    refreshStorage(session.chatList, null);
 }
 
 watch(userInput, (newVal) => {
@@ -78,6 +110,24 @@ watch(userInput, (newVal) => {
         launchBtnColor.value = "rgba(108,108,108,1)";
         launchBtnCursor.value = "pointer";
     }
+})
+
+onMounted(() => {
+    chatIndexList = getChatIndexList();
+    // 恢复该会话的聊天内容
+    if (session.nowChoose == '') session.nowChoose = getChatIndex();
+    const chatIdx = session.nowChoose;
+    const idx = chatIndexList.findIndex(item => item === chatIdx);
+    const chatItem = retrieveChatStorage(idx);
+    let len = 0;
+    if (chatItem != null)
+        len = chatItem.data.length;
+    
+    for (let i=0; i<len; i++)
+        msgList.push(chatItem.data[i]);
+    if (session.chatList == []) // 为空时才更新全局状态，否则不重复执行
+        session.chatList = retrieveTotalChatList();
+    
 })
 </script>
 

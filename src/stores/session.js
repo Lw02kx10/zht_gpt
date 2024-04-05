@@ -5,7 +5,8 @@ export const useSessionStore = defineStore('session', {
     state: () => {
         return {
             nowChoose: '', // 默认为空字符串，表示哪个会话都没有选择
-            chatIdList: [],
+            chatIdList: [], // 仅存储每一个会话的id
+            chatList: [], // 
             router: useRouter(),
         }
     },

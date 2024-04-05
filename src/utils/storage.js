@@ -1,4 +1,24 @@
 // 刷新localStorage
+/*
+    chatList的数据结构如下：
+    chatList: [
+        {
+            chatIndex: string,   该session的uuid，用于查询
+            data: [
+                {
+                    isUser: bool,  用户或机器人的信息
+                    content: string,  具体文字内容
+                    dateTime: string, 信息发送时间
+                    error: bool,  是否发送失败
+                    loading: bool, 仅针对于机器人信息，是否正在等待响应
+                }    
+                ...   
+            ]
+        }
+        ...
+    ]
+*/
+
 export function refreshStorage(chatList, historyList) {
     const chatKey = 'chatInfo';
     const historyKey = 'historyInfo';
@@ -16,14 +36,23 @@ export function refreshStorage(chatList, historyList) {
     }
 }
 
-// 获取localStorage中存储的chatList数据
+// 获取localStorage中存储的chatList中的某条数据
 export function retrieveChatStorage(index) {
     const chatKey = 'chatInfo';
 
     let jsonChatStr = localStorage.getItem(chatKey);
     let chatList = JSON.parse(jsonChatStr);
 
-    return chatList[index];
+    return (jsonChatStr == null) ? null : chatList[index];
+}
+
+// 获取localStorage中的整个chatList
+export function retrieveTotalChatList() {
+    const chatKey = 'chatInfo';
+    let jsonChatStr = localStorage.getItem(chatKey);
+    let chatList = JSON.parse(jsonChatStr);
+
+    return (jsonChatStr == null) ? [] : chatList;
 }
 
 // 获取localStorage中存储的historyList数据
