@@ -30,6 +30,7 @@
 <script setup lang="js">
 import { ref, watch, reactive, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import axios from 'axios';
 import UserMessage from "./UserMessage.vue";
 import RobotMessage from "./RobotMessage.vue";
 import timeFormat from '../utils/timeFormat';
@@ -41,6 +42,7 @@ import { getChatIndexList, retrieveChatStorage, refreshStorage,
 
 const session = useSessionStore();
 const route = useRoute();
+const devEnv = "http://172.23.148.156:5601"; // 测试环境后端地址
 
 let userInput = ref("");
 let inputNode = ref();
@@ -72,18 +74,24 @@ const launchMsg = () => {
     msgList.push(userMsg);
 
     // chatgpt作回复的逻辑写在这里
-    let robotMsg = {
-        isUser: false,
-        content: chatContent,
-        dateTime: timeFormatStr,
-        error: false,
-        loading: false,
-    }
+    axios.get(devEnv + '/query?text=' + userMsg.content).then(res => {
+        // console.log(res);
+        const robotAns = res.data.data.ans;
+        const now = new Date();
+        const robotReplyTime = timeFormat(now);
+        let robotMsg = {
+            isUser: false,
+            content: robotAns,
+            dateTime: robotReplyTime,
+            error: false,
+            loading: false,
+        }
 
-    msgList.push(robotMsg);
-    
-    session.chatList[chatIdx] = msgList;
-    refreshStorage(session.chatList, null);
+        msgList.push(robotMsg);
+        
+        session.chatList[chatIdx] = msgList;
+        refreshStorage(session.chatList, null);
+    })
 }
 
 // 切换路由时用于重新刷新页面数据

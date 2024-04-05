@@ -1,12 +1,13 @@
 import json
 
 from flask import Flask, request
+from flask_cors import CORS
 from typing import *
 from utils.rsp import generate_success_rsp, generate_bad_request_rsp
 from rag import RAGRobot
 
 app = Flask(__name__)
-
+CORS(app, origins="http://172.23.148.156:3000/*")
 
 @app.route('/query', methods=["GET"])
 def handle_query() -> Dict:
