@@ -11,8 +11,9 @@
             </div>
             <div class="msg-content">
                 <div class="simulation-cursor" v-show="loading == true"> </div>
-                <div class="text-content">
-                    <span>{{ content }}</span>
+                <div class="text-content" ref="textNode">
+                    <span id="first-span" v-if="loading == true"></span>
+                    <span v-html="markedText" id="second-span" v-if="loading == false"></span>
                 </div>
             </div>
         </div>
@@ -20,9 +21,24 @@
 </template>
 
 <script setup lang="js">
-defineProps(['time', 'content', 'loading']);
+const props = defineProps(['time', 'content', 'loading']);
+
+import { marked } from 'marked';
+import { computed } from 'vue';
+
+const markedText = computed(() => {
+    return marked(props.content);
+})
 </script>
 
+<style>
+ul, ol {
+    padding-left: 10px;
+    li {
+        margin-top: 5px;
+    }
+}
+</style>
 <style lang="scss" scoped>
 .robot-root {
     display: flex;
@@ -63,7 +79,7 @@ defineProps(['time', 'content', 'loading']);
                 animation: 0.7s linear infinite simu-cursor;
             }
             .text-content {
-                span:before {
+                #first-span::before {
                     content: "\00a0";
                 }
             }
