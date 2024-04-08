@@ -18,9 +18,16 @@
                     @keyup.enter="launchMsg"
                 />
             </div>
-            <div class="launch-btn-wrapper">
+            <div class="launch-btn-wrapper" v-show="!isResponsing">
                 <div class="launch-btn" @click="launchMsg">
                     <Promotion color="#fff" />
+                </div>
+            </div>
+            <div class="stop-response-btn-wrapper" v-show="isResponsing">
+                <div class="stop-response-btn" @click="stopResponse">
+                    <el-button type="warning" :icon="VideoPause">
+                        停止输出
+                    </el-button>
                 </div>
             </div>
         </div>
@@ -33,8 +40,8 @@ import UserMessage from "./UserMessage.vue";
 import RobotMessage from "./RobotMessage.vue";
 import { useRoute } from 'vue-router';
 import timeFormat from '../utils/timeFormat';
-import { ElInput, ElScrollbar } from "element-plus";
-import { Promotion } from '@element-plus/icons-vue';
+import { ElInput, ElScrollbar, ElButton } from "element-plus";
+import { Promotion, VideoPause } from '@element-plus/icons-vue';
 import { useSessionStore } from "../stores/session";
 import { retrieveChatStorage, refreshStorage,
     retrieveTotalChatList, getChatIndex } from "../utils/storage";
@@ -48,6 +55,7 @@ let inputNode = ref();
 let isDisableLaunch = ref(true); // 是否禁止发送
 let launchBtnColor = ref("rgba(108, 108, 108, 0.6)");
 let launchBtnCursor = ref("not-allowed");
+let isResponsing = ref(false);  // 是否正在响应
 
 let msgList = reactive([]); // 是一个结构体数组，结构体中有时间、内容、需要渲染的组件（是UserMessage还是RobotMessage）
 
@@ -108,6 +116,7 @@ const launchMsg = () => {
     }
     
     source.onerror = e => {
+        console.log("error close");
         source.close();
         session.chatList[chatIdx] = msgList;
         refreshStorage(session.chatList, null);
@@ -132,6 +141,11 @@ const refreshInfo = () => {
     session.chatList = retrieveTotalChatList();
 }
 
+// 停止响应
+const stopResponse = () => {
+
+}
+
 watch(userInput, (newVal) => {
     if (newVal.trim() == "") { // 用户输入的是空字符串
         isDisableLaunch.value = true;
@@ -154,6 +168,13 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 $gray: #e5e7eb;
+
+@mixin vertical-center {
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
 .chat-context-root {
     flex-grow: 1;
     display: flex;
@@ -178,6 +199,7 @@ $gray: #e5e7eb;
             flex-grow: 1;
             display: flex;
             align-items: center;
+            transition: all 0.7s;
             .el-textarea {
                 height: 25px;
                 margin-top: 2px;
@@ -187,15 +209,29 @@ $gray: #e5e7eb;
         .launch-btn-wrapper {
             width: 38px;
             .launch-btn {
-                position: relative;
-                top: 50%;
-                transform: translateY(-50%);
+                @include vertical-center;
+                height: 24px;
                 margin: 0 10px 0 0;
                 background-color: v-bind(launchBtnColor);
                 border-radius: 2px;
                 cursor: v-bind(launchBtnCursor);
                 svg {
                     padding: 2px 6px;
+                    @include vertical-center;
+                }
+            }
+        }
+        .stop-response-btn-wrapper {
+            @include vertical-center;
+            height: 24px;
+            margin-right: 10px;
+            .stop-response-btn {
+                @include vertical-center;
+                height: 24px;
+                font-size: 8px !important;
+                .el-button {
+                    height: 24px;
+                    font-size: 12px;
                 }
             }
         }

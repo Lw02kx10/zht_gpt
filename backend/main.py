@@ -7,7 +7,7 @@ from utils.rsp import generate_bad_request_rsp
 from rag import RAGRobot
 
 app = Flask(__name__)
-CORS(app, origins="http://172.23.148.156:3000/*")
+CORS(app, origins="http://172.16.0.2:3000/*")
 
 
 @app.route('/query', methods=["GET"])
