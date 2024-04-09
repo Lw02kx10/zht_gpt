@@ -59,6 +59,9 @@ let isResponsing = ref(false);  // 是否正在响应
 
 let msgList = reactive([]); // 是一个结构体数组，结构体中有时间、内容、需要渲染的组件（是UserMessage还是RobotMessage）
 
+let reqPath = ""; // 请求地址
+let source = null; // eventSource对象
+
 
 // 发送信息
 const launchMsg = () => {
@@ -80,6 +83,7 @@ const launchMsg = () => {
     }
 
     msgList.push(userMsg);
+    isResponsing.value = true; // 表示机器人现在正在等待响应
     
     // 先生成一个回复框，暂时不写内容，表示正在等待响应
     now = new Date();
@@ -94,8 +98,8 @@ const launchMsg = () => {
     msgList.push(robotMsg);
 
     // chatgpt作回复的逻辑写在这里
-    const reqPath = devEnv + '/query?text=' + userMsg.content;
-    const source = new EventSource(reqPath);
+    reqPath = devEnv + '/query?text=' + userMsg.content;
+    source = new EventSource(reqPath);
 
     source.onopen = e => {
         console.log("open");
@@ -120,6 +124,7 @@ const launchMsg = () => {
         source.close();
         session.chatList[chatIdx] = msgList;
         refreshStorage(session.chatList, null);
+        isResponsing.value = false;
     }
 }
 
@@ -143,7 +148,15 @@ const refreshInfo = () => {
 
 // 停止响应
 const stopResponse = () => {
+    const chatIdx = session.nowChoose;
+    source.close();
 
+    let len = msgList.length;
+    msgList[len-1].content += "<br><strong style='color: red;'>[输出中断]</strong>";
+
+    session.chatList[chatIdx] = msgList;
+    refreshStorage(session.chatList, null);
+    isResponsing.value = false;
 }
 
 watch(userInput, (newVal) => {
