@@ -1,12 +1,12 @@
 import re
 import os
 
-from llama_index.prompts import ChatPromptTemplate, ChatMessage, MessageRole
-from llama_index.node_parser import SentenceWindowNodeParser
-from llama_index import SimpleDirectoryReader, VectorStoreIndex, StorageContext, load_index_from_storage
-from llama_index.postprocessor import SentenceTransformerRerank
-from llama_index.llms import OpenAI
-from llama_index import ServiceContext, set_global_service_context
+from llama_index.core.prompts import ChatPromptTemplate, ChatMessage, MessageRole
+from llama_index.core.node_parser import SentenceWindowNodeParser
+from llama_index.core import SimpleDirectoryReader, VectorStoreIndex, StorageContext, load_index_from_storage
+from llama_index.core.postprocessor import SentenceTransformerRerank
+from llama_index.core import ServiceContext, set_global_service_context
+from llama_index.llms.openai import OpenAI
 from typing import *
 
 QA_PROMPT_TMPL_STR = (

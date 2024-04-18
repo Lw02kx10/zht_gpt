@@ -24,7 +24,7 @@
                 </div>
             </div>
             <div class="stop-response-btn-wrapper" v-show="isResponsing">
-                <div class="stop-response-btn" @click="stopResponse">
+                <div class="stop-response-btn" @click="stopResponse(session.nowChoose)">
                     <el-button type="warning" :icon="VideoPause">
                         停止输出
                     </el-button>
@@ -147,12 +147,15 @@ const refreshInfo = () => {
 }
 
 // 停止响应
-const stopResponse = () => {
-    const chatIdx = session.nowChoose;
+const stopResponse = (nowChoose) => {
+    const chatIdx = nowChoose;
     source.close();
 
     let len = msgList.length;
-    msgList[len-1].content += "<br><strong style='color: red;'>[输出中断]</strong>";
+    if (msgList[len-1].loading) { // 一个字都还没输出的情况（即光标还正在闪烁）
+        msgList[len-1].loading = false;
+        msgList[len-1].content = "<strong style='color: red;'>[输出中断]</strong>";
+    } else msgList[len-1].content += "<br><strong style='color: red;'>[输出中断]</strong>";
 
     session.chatList[chatIdx] = msgList;
     refreshStorage(session.chatList, null);
@@ -173,9 +176,17 @@ watch(userInput, (newVal) => {
 watch(() => route.params.chat_id, () => {
     refreshInfo();
 })
+watch(() => session.nowChoose, (_, oldVal) => {
+    if (isResponsing.value == true) 
+        stopResponse(oldVal);
+})
 
 onMounted(() => {
     refreshInfo();
+    window.addEventListener('beforeunload', () => {
+        if (isResponsing.value == true)
+            stopResponse(session.nowChoose);
+    })
 })
 </script>
 
