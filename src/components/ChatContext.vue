@@ -3,7 +3,8 @@
         <div class="main-context">
             <el-scrollbar>
                 <component v-for="(item, index) in msgList" :key="index" 
-                :time="item.dateTime" :content="item.content" :loading="item.loading" :is="item.isUser ? UserMessage : RobotMessage" class="chat-item"></component>
+                :time="item.dateTime" :content="item.content"
+                :idx="index" :loading="item.loading" :is="item.isUser ? UserMessage : RobotMessage" class="chat-item"></component>
             </el-scrollbar>
         </div>
         <div class="text-input-line">
@@ -179,6 +180,9 @@ watch(() => route.params.chat_id, () => {
 watch(() => session.nowChoose, (_, oldVal) => {
     if (isResponsing.value == true) 
         stopResponse(oldVal);
+})
+watch(() => session.chatList[session.nowChoose], (newVal) => {
+    msgList = newVal;
 })
 
 onMounted(() => {

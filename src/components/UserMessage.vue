@@ -1,5 +1,5 @@
 <template>
-    <div class="user-root">
+    <div class="user-root" v-if="!isHideMsg">
         <div class="right-part">
             <div class="user-avatar">
                 <img src="../assets/avatar.png">
@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="js">
-let propsObj = defineProps(['time', 'content', 'loading']);
+let propsObj = defineProps(['time', 'content', 'loading', 'idx']);
 
 import { ref, onMounted } from 'vue';
 import { Delete, CopyDocument } from '@element-plus/icons-vue';
@@ -35,17 +35,19 @@ const clipboard = new ClipboardJS('.copy-btn');
 const message = useMessageStore();
 
 let needCopyContent = ref("");
+let isHideMsg = ref(false);
 
 clipboard.on('success', (e) => {
     message.isShowCopyPrompt = true;
     setTimeout(() => message.isShowCopyPrompt = false, 2000);
 })
-
 const delMsg = () => {
-
+    message.isShowPreDelInfo = true;
+    message.msgDelIdx = propsObj.idx;
 }
 
 onMounted(() => {
+    isHideMsg.value = propsObj.isDel;
     needCopyContent.value = propsObj.content;
     needCopyContent.value = needCopyContent.value.trimEnd();
 })

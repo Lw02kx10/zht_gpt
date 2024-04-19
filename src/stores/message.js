@@ -4,7 +4,9 @@ export const useMessageStore = defineStore('message', {
     state: () => {
         return {
             isShowCopyPrompt: false,
-            isShowDeletePrompt: false
+            isShowDeletePrompt: false,
+            isShowPreDelInfo: false,
+            msgDelIdx: -1,
         }
     }
 })

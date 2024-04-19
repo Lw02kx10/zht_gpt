@@ -11,7 +11,7 @@
                     </div>
                 </div>
                 <div class="dialog-content">
-                    <span>确认要删除该会话吗？</span>
+                    <span>{{ content }}</span>
                 </div>
                 <div class="dialog-btn-wrapper">
                     <div class="left-btn" @click="$emit('cancel-click')">取消</div>
@@ -26,7 +26,7 @@
 import { WarnTriangleFilled } from '@element-plus/icons-vue';
 import { ElIcon } from 'element-plus';
 
-defineProps(['isShow']);
+defineProps(['isShow', 'content']);
 defineEmits(['cancel-click', 'confirm-click']);
 
 </script>

@@ -2,8 +2,15 @@
     <div class="root">
         <DialogOverlay 
             :isShow="isShow"
+            content="确认要删除该会话吗？"
             @cancel-click="isShow = !isShow"
             @confirm-click="deleteSession(deleteIdx)"
+        />
+        <DialogOverlay 
+            :isShow="message.isShowPreDelInfo"
+            content="确认要删除该信息吗？"
+            @cancel-click="message.isShowPreDelInfo = !message.isShowPreDelInfo"
+            @confirm-click="deleteMsg()"
         />
         <MessageBox 
             message="删除成功"
@@ -224,6 +231,20 @@ const deleteSession = (idx) => {
     setTimeout(() => {
         isShowDeleteSuccess.value = false;
     }, 2000);
+}
+
+// 删除某条信息
+const deleteMsg = () => {
+    message.isShowPreDelInfo = false;
+    
+    const chatIdx = session.nowChoose;
+    const listIdx = message.msgDelIdx;
+
+    session.chatList[chatIdx].splice(listIdx, 1);
+    refreshStorage(session.chatList, null);
+
+    message.isShowDeletePrompt = true;
+    setTimeout(() => message.isShowDeletePrompt = false, 2000);
 }
 
 const refreshChatItemList = () => {
