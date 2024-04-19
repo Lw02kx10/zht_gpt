@@ -13,11 +13,42 @@
                 <span>{{ content }}</span>
             </div>
         </div>
+        <div class="more-operation">
+            <div class="delete-btn" @click="delMsg">
+                <Delete color="#000"/>
+            </div>
+            <div class="copy-btn" :data-clipboard-text="needCopyContent">
+                <CopyDocument color="#000"/>
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup lang="js">
-defineProps(['time', 'content', 'loading']);
+let propsObj = defineProps(['time', 'content', 'loading']);
+
+import { ref, onMounted } from 'vue';
+import { Delete, CopyDocument } from '@element-plus/icons-vue';
+import { useMessageStore } from '../stores/message';
+
+const clipboard = new ClipboardJS('.copy-btn');
+const message = useMessageStore();
+
+let needCopyContent = ref("");
+
+clipboard.on('success', (e) => {
+    message.isShowCopyPrompt = true;
+    setTimeout(() => message.isShowCopyPrompt = false, 2000);
+})
+
+const delMsg = () => {
+
+}
+
+onMounted(() => {
+    needCopyContent.value = propsObj.content;
+    needCopyContent.value = needCopyContent.value.trimEnd();
+})
 </script>
 
 <style lang="scss" scoped>
@@ -53,6 +84,30 @@ defineProps(['time', 'content', 'loading']);
                 width: 100%;
                 height: 100%;
                 border-radius: 100%;
+            }
+        }
+    }
+    .more-operation {
+        display: flex;
+        align-items: end;
+        .delete-btn {
+            margin-right: 2px;
+            width: 9px;
+            cursor: pointer;
+            &:hover {
+                svg {
+                    color: #6c6c6c;
+                }
+            }
+        }
+        .copy-btn {
+            margin-right: 2px;
+            width: 9px;
+            cursor: pointer;
+            &:hover {
+                svg {
+                    color: #6c6c6c;
+                }
             }
         }
     }

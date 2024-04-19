@@ -15,6 +15,16 @@
             :isShow="isShowInputMustNotNull"
             type="warning"
         />
+        <MessageBox
+            message="复制成功"
+            :isShow="message.isShowCopyPrompt"
+            type="success"
+        />
+        <MessageBox
+            message="删除成功"
+            :isShow="message.isShowDeletePrompt"
+            type="success"
+        />
         <div class="container-wrapper">
             <div class="chat-record-wrapper-father">
                 <div class="chat-record-wrapper">
@@ -71,6 +81,7 @@ import ChatItem from "../components/ChatItem.vue";
 import DialogOverlay from "../components/DialogOverlay.vue";
 import MessageBox from "../components/MessageBox.vue";
 import { useSessionStore } from "../stores/session";
+import { useMessageStore } from '../stores/message';
 import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
 import sleep from "../utils/sleep";
 import { v4 as uuidv4 } from 'uuid';
@@ -79,6 +90,7 @@ import { retrieveHistoryStorage,
     setChatIndexList, getChatIndexList, retrieveTotalChatList, clearChatListDebug } from "../utils/storage";
 
 const session = useSessionStore();
+const message = useMessageStore();
 const route = useRoute();
 const router = useRouter();
 
