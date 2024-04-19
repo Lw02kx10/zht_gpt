@@ -6,6 +6,7 @@
         chatIndex: [ 
             {
                 isUser: bool,  用户或机器人的信息
+                [isResponsing: bool], 该key只有机器人的信息会有，表示该信息是否正在响应
                 content: string,  具体文字内容
                 dateTime: string, 信息发送时间
                 error: bool,  是否发送失败

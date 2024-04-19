@@ -7,6 +7,7 @@ export const useMessageStore = defineStore('message', {
             isShowDeletePrompt: false,
             isShowPreDelInfo: false,
             msgDelIdx: -1,
+            isResponsing: false, // 是否正在响应
         }
     }
 })

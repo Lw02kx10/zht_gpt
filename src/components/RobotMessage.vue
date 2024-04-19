@@ -17,25 +17,56 @@
                 </div>
             </div>
         </div>
+        <div class="more-operation" v-if="!isResponsing">
+            <div class="copy-btn" :data-clipboard-text="needCopyContent">
+                <CopyDocument color="#000"/>
+            </div>
+            <div class="delete-btn" @click="delMsg">
+                <Delete color="#000"/>
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup lang="js">
-const props = defineProps(['time', 'content', 'loading']);
+const props = defineProps(['time', 'content', 'loading', 'idx', 'isResponsing']);
 
 import { marked } from 'marked';
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import { useMessageStore } from '../stores/message';
+import { Delete, CopyDocument } from '@element-plus/icons-vue';
 
+const clipboard = new ClipboardJS('.copy-btn');
+const message = useMessageStore();
+
+let needCopyContent = ref("");
+
+clipboard.on('success', (e) => {
+    message.isShowCopyPrompt = true;
+    setTimeout(() => message.isShowCopyPrompt = false, 2000);
+})
+const delMsg = () => {
+    message.isShowPreDelInfo = true;
+    message.msgDelIdx = props.idx;
+}
 const markedText = computed(() => {
     return marked(props.content);
 })
+
+onMounted(() => {
+    needCopyContent.value = props.content;
+    needCopyContent.value = needCopyContent.value.trimEnd();
+})
 </script>
 
-<style>
+<style lang="scss">
 ul, ol {
     padding-left: 10px;
     li {
         margin-top: 5px;
+    }   
+    ~p {
+        margin-top: 3px;
     }
 }
 </style>
@@ -84,6 +115,30 @@ ul, ol {
                 }
             }
         }
+    }
+    .more-operation {
+        display: flex;
+        align-items: end;
+        .delete-btn {
+            margin-left: 2px;
+            width: 9px;
+            cursor: pointer;
+            &:hover {
+                svg {
+                    color: #6c6c6c;
+                }
+            }
+        }
+        .copy-btn {
+            margin-left: 2px;
+            width: 9px;
+            cursor: pointer;
+            &:hover {
+                svg {
+                    color: #6c6c6c;
+                }
+            }
+        }    
     }
 }
 

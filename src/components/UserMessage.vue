@@ -1,5 +1,5 @@
 <template>
-    <div class="user-root" v-if="!isHideMsg">
+    <div class="user-root">
         <div class="right-part">
             <div class="user-avatar">
                 <img src="../assets/avatar.png">
@@ -35,7 +35,6 @@ const clipboard = new ClipboardJS('.copy-btn');
 const message = useMessageStore();
 
 let needCopyContent = ref("");
-let isHideMsg = ref(false);
 
 clipboard.on('success', (e) => {
     message.isShowCopyPrompt = true;
@@ -47,7 +46,6 @@ const delMsg = () => {
 }
 
 onMounted(() => {
-    isHideMsg.value = propsObj.isDel;
     needCopyContent.value = propsObj.content;
     needCopyContent.value = needCopyContent.value.trimEnd();
 })

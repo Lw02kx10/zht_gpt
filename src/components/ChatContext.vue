@@ -3,7 +3,7 @@
         <div class="main-context">
             <el-scrollbar>
                 <component v-for="(item, index) in msgList" :key="index" 
-                :time="item.dateTime" :content="item.content"
+                :time="item.dateTime" :content="item.content" :isResponsing="item.isResponsing"
                 :idx="index" :loading="item.loading" :is="item.isUser ? UserMessage : RobotMessage" class="chat-item"></component>
             </el-scrollbar>
         </div>
@@ -56,7 +56,6 @@ let inputNode = ref();
 let isDisableLaunch = ref(true); // 是否禁止发送
 let launchBtnColor = ref("rgba(108, 108, 108, 0.6)");
 let launchBtnCursor = ref("not-allowed");
-let isResponsing = ref(false);  // 是否正在响应
 
 let msgList = reactive([]); // 是一个结构体数组，结构体中有时间、内容、需要渲染的组件（是UserMessage还是RobotMessage）
 
@@ -84,13 +83,13 @@ const launchMsg = () => {
     }
 
     msgList.push(userMsg);
-    isResponsing.value = true; // 表示机器人现在正在等待响应
     
     // 先生成一个回复框，暂时不写内容，表示正在等待响应
     now = new Date();
     const robotReplyTime = timeFormat(now);
     let robotMsg = {
         isUser: false,
+        isResponsing: true,
         content: '',
         dateTime: robotReplyTime,
         error: false,
@@ -125,7 +124,7 @@ const launchMsg = () => {
         source.close();
         session.chatList[chatIdx] = msgList;
         refreshStorage(session.chatList, null);
-        isResponsing.value = false;
+        msgList[msgList.length - 1].isResponsing = false;
     }
 }
 
@@ -160,7 +159,7 @@ const stopResponse = (nowChoose) => {
 
     session.chatList[chatIdx] = msgList;
     refreshStorage(session.chatList, null);
-    isResponsing.value = false;
+    msgList[len-1].isResponsing = false;
 }
 
 watch(userInput, (newVal) => {
@@ -178,7 +177,7 @@ watch(() => route.params.chat_id, () => {
     refreshInfo();
 })
 watch(() => session.nowChoose, (_, oldVal) => {
-    if (isResponsing.value == true) 
+    if (msgList[msgList.length - 1].isResponsing == true) 
         stopResponse(oldVal);
 })
 watch(() => session.chatList[session.nowChoose], (newVal) => {
@@ -188,7 +187,7 @@ watch(() => session.chatList[session.nowChoose], (newVal) => {
 onMounted(() => {
     refreshInfo();
     window.addEventListener('beforeunload', () => {
-        if (isResponsing.value == true)
+        if (msgList[msgList.length - 1].isResponsing == true)
             stopResponse(session.nowChoose);
     })
 })
