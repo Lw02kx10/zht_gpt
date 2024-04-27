@@ -1,16 +1,20 @@
 <template>
     <div class="root">
         <DialogOverlay 
-            :isShow="isShow"
+            :is-show="isShow"
             content="确认要删除该会话吗？"
             @cancel-click="isShow = !isShow"
             @confirm-click="deleteSession(deleteIdx)"
         />
         <DialogOverlay 
-            :isShow="message.isShowPreDelInfo"
+            :is-show="message.isShowPreDelInfo"
             content="确认要删除该信息吗？"
             @cancel-click="message.isShowPreDelInfo = !message.isShowPreDelInfo"
             @confirm-click="deleteMsg()"
+        />
+        <DialogOverlay 
+            :is-show="session.isShowSessionSideBar" 
+            :is-single-overlay="true"
         />
         <MessageBox 
             message="删除成功"
@@ -32,7 +36,7 @@
             :isShow="message.isShowDeletePrompt"
             type="success"
         />
-        <div class="container-wrapper">
+        <div class="container-wrapper" ref="containerWrapper">
             <div class="chat-record-wrapper-father">
                 <div class="chat-record-wrapper">
                     <div class="chat-record">
@@ -115,6 +119,9 @@ let sessionTitle = ref("");
 let isShow = ref(false);  // 是否显示删除的遮罩层
 let isShowDeleteSuccess = ref(false); // 是否显示删除成功的提示
 let isShowInputMustNotNull = ref(false); // 输入空字符串的提示
+let sideBarDisplayWay = ref('none');
+let sideBarHeight = ref('');
+let containerWrapper = ref();
 
 let chatItemList = reactive([]);
 
@@ -171,6 +178,7 @@ const confirmAddSession = () => {
         title: title.trim()
     };
     chatItemList.unshift(newChatItem);
+    session.chatTitleList.unshift(chatItemList[0].title);
     refreshStorage(null, chatItemList);
     addInputMargin.value = "-0.58667rem";
     
@@ -220,6 +228,7 @@ const deleteSession = (idx) => {
 
     // 注意这里的先后顺序
     chatItemList.splice(idx, 1);
+    session.chatTitleList.splice(idx, 1);
     refreshStorage(session.chatList, chatItemList);
     session.chatIdList.splice(idx, 1);
     setChatIndexList(session.chatIdList);
@@ -236,7 +245,7 @@ const deleteSession = (idx) => {
 // 删除某条信息
 const deleteMsg = () => {
     message.isShowPreDelInfo = false;
-    
+
     const chatIdx = session.nowChoose;
     const listIdx = message.msgDelIdx;
 
@@ -251,6 +260,7 @@ const refreshChatItemList = () => {
     let historyList = retrieveHistoryStorage();
     for (let item of historyList) {
         chatItemList.push(item);
+        session.chatTitleList.push(item.title);
     }
 }
 
@@ -265,6 +275,9 @@ watch(userInput, (newVal) => {
         launchBtnCursor.value = "pointer";
     }
 })
+watch(() => session.isShowSessionSideBar, (newVal) => {
+    sideBarDisplayWay.value = newVal ? 'flex' : 'none';
+});
 
 onMounted(() => {
     refreshChatItemList();
@@ -279,6 +292,10 @@ onMounted(() => {
         session.changeSession(lastChooseIndex);
         setChatIndex(lastChooseIndex);
     }
+
+    // 获取最外层容器的高度并赋值为sidebar
+    let containerWrapperRect = containerWrapper.value.getBoundingClientRect();
+    sideBarHeight.value = String(containerWrapperRect.height) + 'px';
 })
 </script>
 
@@ -436,6 +453,20 @@ $green: #6c6c6c;
                     font-size: 10px;
                 }
             }
+        }
+    }
+}
+
+@media screen and (max-width: 750px) {
+    .chat-record-wrapper-father {
+        // margin-left: -4.592rem !important;
+        display: v-bind(sideBarDisplayWay) !important;
+        position: absolute !important;
+        height: v-bind(sideBarHeight) !important;
+        z-index: 101 !important;
+        background-color: #fff;
+        .layout-toggle-btn {
+            display: none !important;
         }
     }
 }

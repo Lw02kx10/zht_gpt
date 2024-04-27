@@ -62,6 +62,7 @@ const handleSave = () => {
 }
 
 watch(() => session.nowChoose, (newVal) => {
+    session.nowTitle = session.chatTitleList[props.idx];
     if (newVal == session.chatIdList[props.idx]) {
         wrapperBgc.value = "#f5f5f5";
         iconColor.value = "#6c6c6c";

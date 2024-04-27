@@ -1,7 +1,7 @@
 <template>
     <Transition name="overlay-fade">
-        <div class="dialog-root" v-show="isShow">
-            <div class="dialog-container">
+        <div class="dialog-root" v-show="isShow" @click="undoOverlay">
+            <div class="dialog-container" v-if="!isSingleOverlay">
                 <div class="dialog-title">
                     <el-icon class="warning-icon" color="#f5db05">
                         <WarnTriangleFilled />
@@ -25,10 +25,17 @@
 <script setup lang="js">
 import { WarnTriangleFilled } from '@element-plus/icons-vue';
 import { ElIcon } from 'element-plus';
+import { useSessionStore } from '../stores/session';
 
-defineProps(['isShow', 'content']);
+defineProps(['isShow', 'content', 'isSingleOverlay']);
 defineEmits(['cancel-click', 'confirm-click']);
 
+const session = useSessionStore();
+
+const undoOverlay = () => {
+    if (!session.isShowSessionSideBar) return;
+    session.isShowSessionSideBar = false;
+}
 </script>
 
 <style lang="scss" scoped>

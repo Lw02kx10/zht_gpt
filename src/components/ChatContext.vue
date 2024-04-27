@@ -1,5 +1,13 @@
 <template>
     <div class="chat-context-root">
+        <div class="mobile-top-bar" style="display: none;">
+            <div class="other-session-btn" @click="showSideBar">
+                <Expand color="#000" />
+            </div>
+            <div class="session-title">
+                <span>{{ session.nowTitle }}</span>
+            </div>
+        </div>
         <div class="main-context">
             <el-scrollbar>
                 <component v-for="(item, index) in msgList" :key="index" 
@@ -42,7 +50,7 @@ import RobotMessage from "./RobotMessage.vue";
 import { useRoute } from 'vue-router';
 import timeFormat from '../utils/timeFormat';
 import { ElInput, ElScrollbar, ElButton } from "element-plus";
-import { Promotion, VideoPause } from '@element-plus/icons-vue';
+import { Promotion, VideoPause, Expand } from '@element-plus/icons-vue';
 import { useSessionStore } from "../stores/session";
 import { retrieveChatStorage, refreshStorage,
     retrieveTotalChatList, getChatIndex } from "../utils/storage";
@@ -162,6 +170,11 @@ const stopResponse = (nowChoose) => {
     msgList[len-1].isResponsing = false;
 }
 
+// 移动端显示侧栏
+const showSideBar = () => {
+    session.isShowSessionSideBar = true;
+}
+
 watch(userInput, (newVal) => {
     if (newVal.trim() == "") { // 用户输入的是空字符串
         isDisableLaunch.value = true;
@@ -206,6 +219,24 @@ $gray: #e5e7eb;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    .mobile-top-bar {
+        display: flex;
+        padding: 12px 6px;
+        border-bottom: 1px solid rgb(188, 183, 183);
+        box-shadow: 0px 1px 1.5px rgba(188, 183, 183, 0.3);
+        .other-session-btn {
+            width: 20px;
+            cursor: pointer;
+            svg {
+                height: 100%;
+                @include vertical-center
+            }
+        }
+        .session-title {
+            margin-left: 14px;
+            font-size: 14.5px;
+        }
+    }
     .main-context {
         flex-grow: 1;
         background-image: url("../assets/logo.png");
@@ -262,6 +293,12 @@ $gray: #e5e7eb;
                 }
             }
         }
+    }
+}
+
+@media screen and (max-width: 750px) {
+    .mobile-top-bar {
+        display: flex !important;
     }
 }
 </style>
