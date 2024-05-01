@@ -327,6 +327,7 @@ $green: #6c6c6c;
     width: 100vw;
     height: 100vh;
     display: flex;
+    overflow: hidden;
     .container-wrapper {
         margin: 10px;
         flex-grow: 1;
@@ -468,6 +469,15 @@ $green: #6c6c6c;
         .layout-toggle-btn {
             display: none !important;
         }
+    }
+    .logo-text {
+        font-size: 13px !important;
+    }
+    .add-btn {
+        font-size: 12px !important;
+    }
+    .confirm-add-btn {
+        font-size: 12px !important;
     }
 }
 </style>

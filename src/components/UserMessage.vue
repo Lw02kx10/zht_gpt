@@ -112,4 +112,15 @@ onMounted(() => {
         }
     }
 }
+
+@media screen and (max-width: 750px) {
+    .left-part {
+        .msg-time {
+            font-size: 10.5px !important;
+        }
+        .msg-content {
+            font-size: 12px !important;
+        }
+    }
+}
 </style>

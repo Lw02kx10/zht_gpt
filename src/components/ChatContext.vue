@@ -302,3 +302,10 @@ $gray: #e5e7eb;
     }
 }
 </style>
+<style>
+@media screen and (max-width: 750px) {
+    .el-textarea__inner {
+        font-size: 12px !important;
+    }
+}
+</style>

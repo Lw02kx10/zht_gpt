@@ -152,4 +152,14 @@ $green: #6c6c6c;
         }
     }
 }
+@media screen and (max-width: 750px) {
+    .chat-wrapper {
+        font-size: 12px !important;
+        height: 30px !important;
+        line-height: 30px !important;
+    }
+    .edit-icon, .delete-icon, .save-icon {
+        font-size: 12px !important;
+    }
+}
 </style>

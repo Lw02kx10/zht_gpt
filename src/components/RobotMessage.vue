@@ -150,4 +150,15 @@ ul, ol {
         opacity: 0;
     }
 }
+
+@media screen and (max-width: 750px) {
+    .right-part {
+        .msg-time {
+            font-size: 10.5px !important;
+        }
+        .msg-content {
+            font-size: 12px !important;
+        }
+    }
+}
 </style>
