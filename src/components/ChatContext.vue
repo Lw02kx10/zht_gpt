@@ -157,6 +157,7 @@ const refreshInfo = () => {
 // 停止响应
 const stopResponse = (nowChoose) => {
     const chatIdx = nowChoose;
+    if (!source) return;
     source.close();
 
     let len = msgList.length;
@@ -190,8 +191,8 @@ watch(() => route.params.chat_id, () => {
     refreshInfo();
 })
 watch(() => session.nowChoose, (_, oldVal) => {
-    if (msgList[msgList.length - 1].isResponsing == true) 
-        stopResponse(oldVal);
+    if (msgList[msgList.length - 1] && msgList[msgList.length - 1].isResponsing == true) 
+        stopResponse(oldVal); 
 })
 watch(() => session.chatList[session.nowChoose], (newVal) => {
     msgList = newVal;
