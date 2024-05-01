@@ -61,6 +61,7 @@ const devEnv = "http://172.23.148.156:5601"; // 测试环境后端地址
 
 let userInput = ref("");
 let inputNode = ref();
+let isResponsing = ref(false);
 let isDisableLaunch = ref(true); // 是否禁止发送
 let launchBtnColor = ref("rgba(108, 108, 108, 0.6)");
 let launchBtnCursor = ref("not-allowed");
@@ -104,6 +105,7 @@ const launchMsg = () => {
         loading: true,
     }
     msgList.push(robotMsg);
+    isResponsing.value = true;
 
     // chatgpt作回复的逻辑写在这里
     reqPath = devEnv + '/query?text=' + userMsg.content;
@@ -133,6 +135,7 @@ const launchMsg = () => {
         session.chatList[chatIdx] = msgList;
         refreshStorage(session.chatList, null);
         msgList[msgList.length - 1].isResponsing = false;
+        isResponsing.value = false;
     }
 }
 
@@ -169,6 +172,7 @@ const stopResponse = (nowChoose) => {
     session.chatList[chatIdx] = msgList;
     refreshStorage(session.chatList, null);
     msgList[len-1].isResponsing = false;
+    isResponsing.value = false;
 }
 
 // 移动端显示侧栏
