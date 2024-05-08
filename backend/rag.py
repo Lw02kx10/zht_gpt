@@ -7,6 +7,8 @@ from llama_index.core import SimpleDirectoryReader, VectorStoreIndex, StorageCon
 from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.core import ServiceContext, set_global_service_context
 from llama_index.llms.openai import OpenAI
+from llama_index.llms.openrouter import OpenRouter
+from llama_index.embeddings.premai import PremAIEmbeddings
 from typing import *
 
 QA_PROMPT_TMPL_STR = (
@@ -32,6 +34,8 @@ QA_SYSTEM_PROMPT = ("你是中航通无人机创新公司的一个客服机器�
 #     "新答案: "
 # )
 
+CLOUDFLARE_AI_GATEWAY="https://gateway.ai.cloudflare.com/v1/fe9363948ad017b8316e9a734c0b1d20/zht-gpt/openai"
+
 
 class RAGRobot:
     def __init__(self):
@@ -40,7 +44,18 @@ class RAGRobot:
         self.index = None
         self.query_engine = None
         service_context = ServiceContext.from_defaults(
-            llm=OpenAI(model="gpt-3.5-turbo", temperature=0.01, max_tokens=1024),
+            # llm=OpenAI(model="gpt-3.5-turbo", temperature=0.01, max_tokens=1024),
+            llm=OpenRouter(
+                api_key="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",
+                max_tokens=256,
+                context_window=4096,
+                model="mistralai/mistral-7b-instruct:free"
+            ),
+            embed_model=PremAIEmbeddings(
+                project_id=3372,
+                premai_api_key="kX52M4FYMEeSnKufCgaD3QdhkNNnElo82e",
+                model_name="text-embedding-ada-002"
+            )
         )
         set_global_service_context(service_context)
 

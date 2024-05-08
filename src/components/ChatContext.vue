@@ -58,6 +58,8 @@ import { retrieveChatStorage, refreshStorage,
 const session = useSessionStore();
 const route = useRoute();
 const devEnv = "http://172.23.148.156:5601"; // 测试环境后端地址
+const proEnv = "https://192.168.18.15:5601";
+const huaweiEnv = "https://72e7347809814d03a6c6841c6176e0c5.apig.cn-north-4.huaweicloudapis.com";
 
 let userInput = ref("");
 let inputNode = ref();
@@ -106,13 +108,16 @@ const launchMsg = () => {
     }
     msgList.push(robotMsg);
     isResponsing.value = true;
+    
+    let flag = 0; // 标志是否开始响应了
+    console.time(`${userMsg.content}`);
 
     // chatgpt作回复的逻辑写在这里
     reqPath = devEnv + '/query?text=' + userMsg.content;
     source = new EventSource(reqPath);
 
     source.onopen = e => {
-        console.log("open");
+        //console.log("open");
         const now = new Date();
         const robotReplyTime = timeFormat(now);
 
@@ -123,6 +128,10 @@ const launchMsg = () => {
     }
 
     source.onmessage = e => {
+        if (!flag) {
+            console.timeEnd(`${userMsg.content}`);
+            flag = 1;
+        }
         let data = JSON.parse(e.data);
         let len = msgList.length;
         // console.log(data.ans);
@@ -130,7 +139,7 @@ const launchMsg = () => {
     }
     
     source.onerror = e => {
-        console.log("error close");
+        //console.log("error close");
         source.close();
         session.chatList[chatIdx] = msgList;
         refreshStorage(session.chatList, null);

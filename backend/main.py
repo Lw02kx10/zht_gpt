@@ -2,12 +2,13 @@ import json
 
 from flask import Flask, request, Response, stream_with_context
 from flask_cors import CORS
+from waitress import serve
 from typing import *
 from utils.rsp import generate_bad_request_rsp
 from rag import RAGRobot
 
 app = Flask(__name__)
-CORS(app, origins="http://172.23.148.156:3000/*")
+CORS(app, origins="http://172.25.80.1:3000/*")
 
 
 @app.route('/query', methods=["GET"])
@@ -31,5 +32,6 @@ def handle_query() -> Any:
 if __name__ == "__main__":
     rag = RAGRobot()
     rag.run()
-    app.run(host="0.0.0.0", port=5601)
+    serve(app, host='0.0.0.0', port=5601)
+    # app.run(host='0.0.0.0', port=5601)
 
